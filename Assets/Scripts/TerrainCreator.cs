@@ -13,6 +13,8 @@ public class TerrainCreator : MonoBehaviour
     [Range(0f, 1f)]
     public float persistence = 0.5f;
     public float scale = 1f;
+    public float heightScale = 0.1f;
+    public float zOffset = 0f;
     
     private Terrain _terrain;
     private TerrainData _terrainData;
@@ -26,13 +28,18 @@ public class TerrainCreator : MonoBehaviour
         
         var size = _terrainData.size * scale; // remember: y is height
 
-        var point00 = transform.TransformPoint(new Vector3(0, 0));
-        var point10 = transform.TransformPoint(new Vector3(size.x, 0));
-        var point01 = transform.TransformPoint(new Vector3(0, size.z));
-        var point11 = transform.TransformPoint(new Vector3(size.x, size.z));
+        var point00 = transform.TransformPoint(new Vector3(0, 0, zOffset));
+        var point10 = transform.TransformPoint(new Vector3(size.x, 0, zOffset));
+        var point01 = transform.TransformPoint(new Vector3(0, size.z, zOffset));
+        var point11 = transform.TransformPoint(new Vector3(size.x, size.z, zOffset));
+        
+        float maxDistance = Vector3.Distance(point00, point11) * 0.5f;
+        var center = transform.TransformPoint(new Vector3(size.x * 0.5f, size.z * 0.5f, zOffset)); 
 
-        // 2D noise
+        // 3D noise
         NoiseMethod method = Noise.noiseMethods[(int)type][2];
+        
+        MaskMethod maskMethod = Masks.SquareGradient;
 
         var heightArray = new float[resolution, resolution];
         var stepSize = 1f / resolution;
@@ -49,7 +56,12 @@ public class TerrainCreator : MonoBehaviour
                     sample = sample * 0.5f + 0.5f;
                 }
                 
-                heightArray[x, y] = sample;
+                // Apply mask(s)
+                float distance = Vector3.Distance(point, center);
+                distance /= maxDistance;
+                sample = maskMethod(distance) * sample;
+
+                heightArray[x, y] = sample * heightScale;
             }
         }
 

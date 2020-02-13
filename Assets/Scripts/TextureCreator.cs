@@ -13,6 +13,10 @@ public class TextureCreator : MonoBehaviour
     
     public NoiseMethodType type;
 
+    public MaskTypes upperMask;
+    
+    public MaskTypes lowerMask;
+
     private Texture2D texture;
     
     [Range(1, 8)]
@@ -62,7 +66,13 @@ public class TextureCreator : MonoBehaviour
         var point01 = transform.TransformPoint(new Vector3(-0.5f, 0.5f));
         var point11 = transform.TransformPoint(new Vector3(0.5f, 0.5f));
 
+        float maxDistance = Vector3.Distance(point00, point11) * 0.5f;
+
         NoiseMethod method = Noise.noiseMethods[(int)type][dimensions - 1];
+
+        MaskMethod lower = Masks.SquareGradient;
+        MaskMethod upper = Masks.SquareGradient;
+        
         var stepSize = 1f / resolution;
         for (int y = 0; y < resolution; y++) {
             Vector3 point0 = Vector3.Lerp(point00, point01, (y + 0.5f) * stepSize);
@@ -70,9 +80,16 @@ public class TextureCreator : MonoBehaviour
             for (int x = 0; x < resolution; x++) {
                 Vector3 point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);
                 float sample = Noise.Sum(method, point, frequency, octaves, lacunarity, persistence);
+
                 if (type != NoiseMethodType.Value) {
                     sample = sample * 0.5f + 0.5f;
                 }
+                
+                // Apply mask(s)
+                float distance = Vector3.Distance(point, transform.position);
+                distance /= maxDistance;
+                sample = lower(distance) * sample;
+                
                 texture.SetPixel(x, y, coloring.Evaluate(sample));
             }
         }
