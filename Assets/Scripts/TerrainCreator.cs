@@ -6,6 +6,8 @@ public class TerrainCreator : MonoBehaviour
 {
     public float frequency = 1f;
     public NoiseMethodType type;
+    public MaskTypes upperMask;
+    public MaskTypes lowerMask;
     [Range(1, 8)]
     public int octaves = 1;
     [Range(1f, 4f)]
@@ -39,7 +41,8 @@ public class TerrainCreator : MonoBehaviour
         // 3D noise
         NoiseMethod method = Noise.noiseMethods[(int)type][2];
         
-        MaskMethod maskMethod = Masks.SquareGradient;
+        MaskMethod lowerMaskMethod = Masks.maskMethods[(int)lowerMask];
+        MaskMethod upperMaskMethod = Masks.maskMethods[(int)upperMask];
 
         var heightArray = new float[resolution, resolution];
         var stepSize = 1f / resolution;
@@ -59,7 +62,8 @@ public class TerrainCreator : MonoBehaviour
                 // Apply mask(s)
                 float distance = Vector3.Distance(point, center);
                 distance /= maxDistance;
-                sample = maskMethod(distance) * sample;
+                //sample = upperMaskMethod(distance) * sample;
+                sample = lowerMaskMethod(distance) + sample * (upperMaskMethod(distance) - lowerMaskMethod(distance));
 
                 heightArray[x, y] = sample * heightScale;
             }

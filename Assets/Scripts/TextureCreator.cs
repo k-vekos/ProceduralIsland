@@ -70,8 +70,8 @@ public class TextureCreator : MonoBehaviour
 
         NoiseMethod method = Noise.noiseMethods[(int)type][dimensions - 1];
 
-        MaskMethod lower = Masks.SquareGradient;
-        MaskMethod upper = Masks.SquareGradient;
+        MaskMethod lowerMaskMethod = Masks.maskMethods[(int)lowerMask];
+        MaskMethod upperMaskMethod = Masks.maskMethods[(int)upperMask];
         
         var stepSize = 1f / resolution;
         for (int y = 0; y < resolution; y++) {
@@ -88,7 +88,12 @@ public class TextureCreator : MonoBehaviour
                 // Apply mask(s)
                 float distance = Vector3.Distance(point, transform.position);
                 distance /= maxDistance;
-                sample = lower(distance) * sample;
+                /*sample = lowerMaskMethod(distance) + sample;
+                sample = sample - upperMaskMethod(1 - distance);*/
+
+                //sample = upperMaskMethod(1 - distance) - lowerMaskMethod(distance);
+                
+                sample = lowerMaskMethod(distance) + sample * (upperMaskMethod(distance) - lowerMaskMethod(distance));
                 
                 texture.SetPixel(x, y, coloring.Evaluate(sample));
             }

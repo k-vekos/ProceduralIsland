@@ -6,14 +6,17 @@ public delegate float MaskMethod(float distance);
 
 public enum MaskTypes {
     None,
-    Square
+    SquareLower,
+    SquareUpper
 }
 
 public static class Masks
 {
     public static MaskMethod[] maskMethods =
     {
-        SquareGradient
+        None,
+        SquareGradientLower,
+        SquareGradientUpper
     };
 
     public static float ApplyMask(MaskMethod method, float distance)
@@ -21,8 +24,18 @@ public static class Masks
         return method(distance);
     }
     
-    public static float SquareGradient(float distance)
+    public static float None(float distance)
+    {
+        return distance;
+    }
+    
+    public static float SquareGradientLower(float distance)
     {
         return 1f - distance;
+    }
+    
+    public static float SquareGradientUpper(float distance)
+    {
+        return 2f - distance;
     }
 }
