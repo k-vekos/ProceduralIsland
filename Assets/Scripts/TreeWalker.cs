@@ -7,42 +7,72 @@ public class TreeWalker : MonoBehaviour
     public int iterations = 3;
     public float size = 100f;
     public GameObject nodeObject;
+    public LineRenderer lineRendererObject;
     public float growthLength = 0.1f;
+    public float updateInterval = 0.1f;
 
     private Tree _tree;
-    private YieldInstruction delay = new WaitForSeconds(0.1f);
-    private List<TreeNode> nodesToSpawn = new List<TreeNode>();
-    
+    private YieldInstruction updateWait;
+    private Queue<TreeNode> nodesToSpawn = new Queue<TreeNode>();
+    private int _iteration;
+
     // Start is called before the first frame update
     void Start()
     {
-        Initialize();
+        updateWait = new WaitForSeconds(updateInterval);
         
-        // Place nodes in scene
-        for (var i = 0; i < _tree.allNodes.Count; i++)
-        {
-            var treeNode = _tree.allNodes[i];
-            var node = Instantiate(nodeObject, transform);
-            var targetPos = transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y) * size);
-            node.transform.SetPositionAndRotation(targetPos, Quaternion.identity);
-        }
+        StartCoroutine(WalkCoroutine());
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        // Place any queued nodes in scene
+        while (nodesToSpawn.Count > 0)
+        {
+            var treeNode = nodesToSpawn.Dequeue();
+            var node = Instantiate(nodeObject, transform);
+            var targetPos = GetNodeWorldPosition(treeNode);
+            node.transform.SetPositionAndRotation(targetPos, Quaternion.identity);
+
+            // Add line renderers
+            if (treeNode.parent != null)
+            {
+                // Add line renderer
+                var lineRenderer = Instantiate(lineRendererObject, Vector3.zero, Quaternion.identity, node.transform);
+                
+                // Add line point at parent position
+                lineRenderer.positionCount = 2;
+                lineRenderer.SetPositions(new[]
+                {
+                    GetNodeWorldPosition(treeNode.parent),
+                    GetNodeWorldPosition(treeNode)
+                });
+                
+                // Color line according to iteration #
+                var color = Color.Lerp(Color.green, Color.red, (float) _iteration / iterations);
+                lineRenderer.startColor = color;
+                lineRenderer.endColor = color;
+            }
+        }
     }
 
-    public IEnumerable Initialize()
+    private Vector3 GetNodeWorldPosition(TreeNode treeNode)
+    {
+        return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y) * size);
+    }
+
+    private IEnumerator WalkCoroutine()
     {
         // Place first node randomly in area and add to tree
         var rootNode = new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f));
         _tree = new Tree(rootNode);
-        nodesToSpawn.Add(rootNode);
+        nodesToSpawn.Enqueue(rootNode);
 
-        var itr = 0;
-        while (itr < iterations)
+        yield return updateWait;
+
+        _iteration = 0;
+        while (_iteration < iterations)
         {
             // Get a random sample
             var sample = RandomSample();
@@ -57,10 +87,11 @@ public class TreeWalker : MonoBehaviour
             if (extension != null)
             {
                 _tree.AddChild(closest, extension);
-                nodesToSpawn.Add(extension);
+                nodesToSpawn.Enqueue(extension);
             }
             
-            itr++;
+            _iteration++;
+            yield return updateWait;
         }
     }
 
@@ -75,6 +106,6 @@ public class TreeWalker : MonoBehaviour
         var dist = dir.magnitude;
         dir = dir.normalized;
         dir = from.position + (dir * Mathf.Min(growthLength, dist));
-        return new TreeNode(dir.x, dir.y);
+        return new TreeNode(dir.x, dir.y, from);
     }
 }
