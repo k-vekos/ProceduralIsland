@@ -12,14 +12,14 @@ public class TreeWalker : MonoBehaviour
     public float updateInterval = 0.1f;
 
     private Tree _tree;
-    private YieldInstruction updateWait;
-    private Queue<TreeNode> nodesToSpawn = new Queue<TreeNode>();
+    private YieldInstruction _updateWait;
+    private Queue<TreeNode> _nodesToSpawn = new Queue<TreeNode>();
     private int _iteration;
 
     // Start is called before the first frame update
     void Start()
     {
-        updateWait = new WaitForSeconds(updateInterval);
+        _updateWait = new WaitForSeconds(updateInterval);
         
         StartCoroutine(WalkCoroutine());
     }
@@ -28,33 +28,34 @@ public class TreeWalker : MonoBehaviour
     void Update()
     {
         // Place any queued nodes in scene
-        while (nodesToSpawn.Count > 0)
+        while (_nodesToSpawn.Count > 0)
         {
-            var treeNode = nodesToSpawn.Dequeue();
-            var node = Instantiate(nodeObject, transform);
-            var targetPos = GetNodeWorldPosition(treeNode);
-            node.transform.SetPositionAndRotation(targetPos, Quaternion.identity);
+            var treeNode = _nodesToSpawn.Dequeue();
+            var newNodeObject = Instantiate(nodeObject, GetNodeWorldPosition(treeNode), Quaternion.identity, transform);
+            newNodeObject.name = "Node_" + treeNode.nodeIndex;
 
-            // Add line renderers
             if (treeNode.parent != null)
-            {
-                // Add line renderer
-                var lineRenderer = Instantiate(lineRendererObject, Vector3.zero, Quaternion.identity, node.transform);
-                
-                // Add line point at parent position
-                lineRenderer.positionCount = 2;
-                lineRenderer.SetPositions(new[]
-                {
-                    GetNodeWorldPosition(treeNode.parent),
-                    GetNodeWorldPosition(treeNode)
-                });
-                
-                // Color line according to iteration #
-                var color = Color.Lerp(Color.green, Color.red, (float) _iteration / iterations);
-                lineRenderer.startColor = color;
-                lineRenderer.endColor = color;
-            }
+                AddLineRenderer(treeNode, newNodeObject);
         }
+    }
+
+    private void AddLineRenderer(TreeNode node, GameObject nodeGameObject)
+    {
+        // Add line renderer
+        var lineRenderer = Instantiate(lineRendererObject, Vector3.zero, Quaternion.identity, nodeGameObject.transform);
+                
+        // Add line point at parent position
+        lineRenderer.positionCount = 2;
+        lineRenderer.SetPositions(new[]
+        {
+            GetNodeWorldPosition(node.parent),
+            GetNodeWorldPosition(node)
+        });
+                
+        // Color line according to iteration #
+        var color = Color.Lerp(Color.green, Color.red, (float) _iteration / iterations);
+        lineRenderer.startColor = color;
+        lineRenderer.endColor = color;
     }
 
     private Vector3 GetNodeWorldPosition(TreeNode treeNode)
@@ -65,11 +66,11 @@ public class TreeWalker : MonoBehaviour
     private IEnumerator WalkCoroutine()
     {
         // Place first node randomly in area and add to tree
-        var rootNode = new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f));
+        var rootNode = new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f), 0);
         _tree = new Tree(rootNode);
-        nodesToSpawn.Enqueue(rootNode);
+        _nodesToSpawn.Enqueue(rootNode);
 
-        yield return updateWait;
+        yield return _updateWait;
 
         _iteration = 0;
         while (_iteration < iterations)
@@ -79,7 +80,7 @@ public class TreeWalker : MonoBehaviour
             
             // Get the closest node in the tree to the sample
             var closest = _tree.GetClosestNode(sample);
-            
+
             // Create a new node between the closest node and the sample.
             var extension = ExtendToward(closest, sample);
             
@@ -87,17 +88,19 @@ public class TreeWalker : MonoBehaviour
             if (extension != null)
             {
                 _tree.AddChild(closest, extension);
-                nodesToSpawn.Enqueue(extension);
+                _nodesToSpawn.Enqueue(extension);
             }
             
             _iteration++;
-            yield return updateWait;
+            yield return _updateWait;
         }
+        
+        Debug.Log($"Finished creating tree with {_tree.Nodes.Count} nodes in {_iteration} iterations.");
     }
 
     private TreeNode RandomSample()
     {
-        return new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f));
+        return new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f), -1);
     }
 
     private TreeNode ExtendToward(TreeNode from, TreeNode towards)
@@ -106,6 +109,6 @@ public class TreeWalker : MonoBehaviour
         var dist = dir.magnitude;
         dir = dir.normalized;
         dir = from.position + (dir * Mathf.Min(growthLength, dist));
-        return new TreeNode(dir.x, dir.y, from);
+        return new TreeNode(dir.x, dir.y, _iteration + 1, from);
     }
 }

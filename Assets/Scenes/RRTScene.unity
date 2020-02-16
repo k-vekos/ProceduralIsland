@@ -595,7 +595,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d503eb51e4c791444ad0a1082a5933b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  iterations: 50
+  iterations: 100
   size: 100
   nodeObject: {fileID: 7927925485836526667, guid: 24071a623cb0d094695a6ce2e19fab2f,
     type: 3}

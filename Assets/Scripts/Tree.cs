@@ -5,32 +5,39 @@ using UnityEngine;
 
 public class Tree
 {
-    public TreeNode root;
-    public List<TreeNode> allNodes = new List<TreeNode>();
+    private TreeNode root;
+    private List<TreeNode> _allNodes = new List<TreeNode>();
 
     public Tree(TreeNode root)
     {
         this.root = root;
-        allNodes.Add(root);
+        _allNodes.Add(root);
     }
-    
+
+    public List<TreeNode> Nodes => _allNodes;
+
     public void AddChild(TreeNode parent, TreeNode child)
     {
         parent.children.Add(child);
-        allNodes.Add(child);
+        _allNodes.Add(child);
     }
 
     public TreeNode GetClosestNode(TreeNode target)
     {
-        var closest = allNodes[0];
+        var closest = _allNodes[0];
         var minDistance = Vector2.Distance(closest.position, target.position);
-        for (var i = 1; i < allNodes.Count; i++)
+        for (var i = 1; i < _allNodes.Count; i++)
         {
-            var distance = Vector2.Distance(allNodes[i].position, target.position);
+            var distance = Vector2.Distance(_allNodes[i].position, target.position);
+            //Debug.Log($"Distance from #{i} to #{_allNodes.Count} is {distance}");
             if (distance < minDistance)
-                closest = allNodes[i];
+            {
+                closest = _allNodes[i];
+                minDistance = distance;
+            }
         }
 
+        //Debug.Log($"Closest to #{_allNodes.Count} found to be #{closest.nodeIndex}");
         return closest;
     }
 }
