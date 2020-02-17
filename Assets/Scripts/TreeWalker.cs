@@ -1,9 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class TreeWalker : MonoBehaviour
 {
+    public VoronoiMesh voronoiMesh;
+    
     public int iterations = 3;
     public float size = 100f;
     public GameObject nodeObject;
@@ -20,8 +25,17 @@ public class TreeWalker : MonoBehaviour
     void Start()
     {
         _updateWait = new WaitForSeconds(updateInterval);
+
+        var onIteration = new Action(() =>
+        {
+            var verts = _tree.Nodes.Select(n => n.position).ToList();
+            voronoiMesh.SetMesh(verts, size);
+        });
         
-        StartCoroutine(WalkCoroutine());
+        StartCoroutine(WalkCoroutine(onIteration));
+        
+        /*var walkCoroutine = WalkCoroutine();
+        while (walkCoroutine.MoveNext()) {}*/
     }
 
     // Update is called once per frame
@@ -63,16 +77,27 @@ public class TreeWalker : MonoBehaviour
         return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y) * size);
     }
 
-    private IEnumerator WalkCoroutine()
+    /*public void TreeToVoronoi()
+    {
+        var walkCoroutine = WalkCoroutine();
+        while (walkCoroutine.MoveNext()) {}
+
+        var nodes = _tree.Nodes.Select(n => new Vector2f(n.position.x, n.position.y)).ToList();
+        
+        
+    }*/
+
+    private IEnumerator WalkCoroutine(Action onIteration = null)
     {
         // Place first node randomly in area and add to tree
         var rootNode = new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f), 0);
         _tree = new Tree(rootNode);
         _nodesToSpawn.Enqueue(rootNode);
 
+        _iteration = 0;
+        onIteration?.Invoke();
         yield return _updateWait;
 
-        _iteration = 0;
         while (_iteration < iterations)
         {
             // Get a random sample
@@ -92,6 +117,7 @@ public class TreeWalker : MonoBehaviour
             }
             
             _iteration++;
+            onIteration?.Invoke();
             yield return _updateWait;
         }
         
