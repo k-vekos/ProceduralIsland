@@ -24,7 +24,7 @@ public class TreeWalker : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _updateWait = new WaitForSeconds(updateInterval);
+        /*_updateWait = new WaitForSeconds(updateInterval);
 
         var onIteration = new Action(() =>
         {
@@ -32,10 +32,12 @@ public class TreeWalker : MonoBehaviour
             voronoiMesh.SetMesh(verts, size);
         });
         
-        StartCoroutine(WalkCoroutine(onIteration));
+        StartCoroutine(WalkCoroutine(onIteration));*/
         
-        /*var walkCoroutine = WalkCoroutine();
-        while (walkCoroutine.MoveNext()) {}*/
+        var walkCoroutine = WalkCoroutine();
+        while (walkCoroutine.MoveNext()) {}
+        var verts = _tree.Nodes.Select(n => n.position).ToList();
+        voronoiMesh.SetMesh(verts, size, 2);
     }
 
     // Update is called once per frame
