@@ -2,24 +2,24 @@
 
 public static class RandomTreeBuilder
 {
-    public static Tree GetRandomTree(int iterations, float growthLength)
+    public static Tree GetRandomTree(int iterations, float maxBranchLength, float size)
     {
         // Place first node randomly in area and add to tree
-        var root = RandomSample(0);
+        var root = RandomSample(0, size);
         var tree = new Tree(root);
         
         for (var i = 1; i < iterations; i++)
         {
-            GrowTree(tree, i, growthLength);
+            GrowTree(tree, i, maxBranchLength, size);
         }
         
         return tree;
     }
     
-    private static void GrowTree(Tree tree, int iteration, float growthLength)
+    private static void GrowTree(Tree tree, int iteration, float growthLength, float size)
     {
         // Get a random sample
-        var sample = RandomSample(iteration);
+        var sample = RandomSample(iteration, size);
         
         // Get the closest node in the tree to the sample
         var closest = tree.GetClosestNode(sample);
@@ -36,9 +36,9 @@ public static class RandomTreeBuilder
         // Debug.Log($"Finished creating tree with {tree.Nodes.Count} nodes in {iteration} iterations.");
     }
 
-    private static TreeNode RandomSample(int nodeIndex)
+    private static TreeNode RandomSample(int nodeIndex, float size)
     {
-        return new TreeNode(Random.Range(0f, 1f), Random.Range(0f, 1f), nodeIndex);
+        return new TreeNode(Random.Range(0f, size), Random.Range(0f, size), nodeIndex);
     }
 
     private static TreeNode ExtendToward(TreeNode from, TreeNode towards, float growthLength, int iteration)

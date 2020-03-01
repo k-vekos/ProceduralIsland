@@ -2,21 +2,18 @@
 
 public class TreeRenderer : MonoBehaviour
 {
-    public int iterations = 3;
-    public float size = 100f;
     public GameObject nodeObject;
     public LineRenderer lineRendererObject;
-    public float growthLength = 0.1f;
 
     private Tree _tree;
 
-    void Start()
+    public void SetTree(Tree tree)
     {
-        _tree = RandomTreeBuilder.GetRandomTree(iterations, growthLength);
+        this._tree = tree;
         SpawnNodesAndLines();
     }
 
-    void SpawnNodesAndLines()
+    private void SpawnNodesAndLines()
     {
         for (var i = 0; i < _tree.Nodes.Count; i++)
         {
@@ -43,13 +40,13 @@ public class TreeRenderer : MonoBehaviour
         });
                 
         // Color line according to iteration #
-        var color = Color.Lerp(Color.green, Color.red, (float) node.nodeIndex / iterations);
+        var color = Color.Lerp(Color.green, Color.red, (float) node.nodeIndex / _tree.Nodes.Count);
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
     }
     
     private Vector3 GetNodeWorldPosition(TreeNode treeNode)
     {
-        return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y) * size);
+        return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y));
     }
 }
