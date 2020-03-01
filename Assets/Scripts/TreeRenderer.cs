@@ -40,7 +40,8 @@ public class TreeRenderer : MonoBehaviour
         });
                 
         // Color line according to iteration #
-        var color = Color.Lerp(Color.green, Color.red, (float) node.nodeIndex / _tree.Nodes.Count);
+        //var color = Color.Lerp(Color.green, Color.red, (float) node.nodeIndex / _tree.Nodes.Count);
+        var color = Color.black;
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
     }

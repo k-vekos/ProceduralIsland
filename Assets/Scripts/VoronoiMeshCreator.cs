@@ -16,8 +16,69 @@ public static class VoronoiMeshCreator
 
         return MeshFromVoronoi(voronoi);
     }
-
+    
     private static Mesh MeshFromVoronoi(Voronoi voronoi)
+    {
+        var options = new TriangleNet.Meshing.ConstraintOptions
+        {
+            ConformingDelaunay = true
+        };
+
+        var vertices = new List<Vector3>();
+        var verticesIndex = 0;
+        var triangles = new List<int>();
+        var colors = new List<Color>();
+
+        var regions = voronoi.Regions();
+        for (var i = 0; i < regions.Count; i++)
+        {
+            var region = regions[i];
+            
+            var polygon = new TriangleNetGeo.Polygon();
+            foreach (var corner in region)
+            {
+                polygon.Add(new TriangleNetGeo.Vertex(corner.x, corner.y));
+            }
+            
+            var cellMesh = (TriangleNet.Mesh) polygon.Triangulate(options);
+
+            vertices.AddRange(
+                cellMesh.Vertices.Select(v => new Vector3((float) v.x, 0, (float) v.y))
+            );
+
+            triangles.AddRange(
+                cellMesh.Triangles.SelectMany(
+                    
+                    t => t.vertices.Select(v => v.id + verticesIndex)
+                        .Reverse() // Reverse triangles so they're facing the right way
+                )
+            );
+            
+            // Update index so the next batch of triangles point to the correct vertices
+            verticesIndex = vertices.Count;
+            
+            // Assign same color to all vertices in region
+            //var alpha = (float) i / regions.Count);
+            //var regionColor = Color.Lerp(Color.green, Color.red, alpha);
+            var regionColor = new Color(Random.Range(0, 1f), Random.Range(0, 1f), Random.Range(0, 1f));
+            colors.AddRange(cellMesh.Vertices.Select(v => regionColor));
+        }
+
+        // Just make world-space UVs for now
+        var uvs = vertices.Select(v => new Vector2(v.x, v.y));
+
+        var mesh = new Mesh {
+            vertices = vertices.ToArray(),
+            colors = colors.ToArray(),
+            uv = uvs.ToArray(),
+            triangles = triangles.ToArray()
+        };
+        mesh.RecalculateNormals();
+
+        return mesh;
+    }
+
+    private static Mesh LineMeshFromVoronoi(Voronoi voronoi)
     {
         var vertices = GetVerticesFromEdges(voronoi.Edges);
         var indices = Enumerable.Range(0, vertices.Length).ToArray();
