@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using csDelaunay;
+using Map;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -14,40 +15,42 @@ public class IslandBuilder : MonoBehaviour
     public float voronoiSizeScale = 1f;
     public int voronoiRelaxation = 0;
     public VoronoiRenderer voronoiRenderer;
-
-    private Tree _tree;
+    public MapRenderer mapRenderer;
 
     public void Start()
     {
-        _tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, size);
+        BuildIslandAndInitRenderers();
+    }
+    
+    public void BuildIslandAndInitRenderers()
+    {
+        var tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, size);
         
-        // Set tree on TreeRenderer
+        var voronoiSize = size * voronoiSizeScale;
+        float scaleDifference = (size * voronoiSizeScale) - size;
+        var bounds = new Rectf(
+            0 - scaleDifference * 0.5f,
+            0 - scaleDifference * 0.5f,
+            voronoiSize,
+            voronoiSize
+        );
+        var points = new List<Vector2>(GetRandomPoints(voronoiPointCount, bounds));
+        // Throw the tree points in for fun
+        points.AddRange(tree.Nodes.Select(n => n.position));
+        var pointsF = points.Select(v => new Vector2f(v.x, v.y)).ToList();
+        var voronoi = new Voronoi(pointsF, bounds, voronoiRelaxation);
+
+        var cells = MapHelper.CellsFromVoronoi(voronoi);
+        MapHelper.CalculateCellTypes(cells, tree, treeMaxGrowthLength);
+        
         if (treeRenderer != null)
-        {
-            treeRenderer.SetTree(_tree);
-        }
-        
-        // Set points on VoronoiRenderer
+            treeRenderer.SetTree(tree);
+
         if (voronoiRenderer != null)
-        {
-            var voronoiSize = size * voronoiSizeScale;
+            voronoiRenderer.SetVoronoi(voronoi);
 
-            float scaleDifference = (size * voronoiSizeScale) - size;
-            
-            var bounds = new Rectf(
-                0 - scaleDifference * 0.5f,
-                0 - scaleDifference * 0.5f,
-                voronoiSize,
-                voronoiSize
-                );
-            
-            var points = new List<Vector2>(GetRandomPoints(voronoiPointCount, bounds));
-            
-            // Throw the tree points in for fun
-            points.AddRange(_tree.Nodes.Select(n => n.position));
-
-            voronoiRenderer.CreateAndSetMesh(points.ToArray(), bounds, voronoiRelaxation);
-        }
+        if (mapRenderer != null)
+            mapRenderer.SetCells(cells);
     }
 
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)

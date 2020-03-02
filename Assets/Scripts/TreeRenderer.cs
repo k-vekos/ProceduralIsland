@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UnityEditor.UI;
+using UnityEngine;
 
 public class TreeRenderer : MonoBehaviour
 {
@@ -6,6 +7,7 @@ public class TreeRenderer : MonoBehaviour
     public LineRenderer lineRendererObject;
 
     private Tree _tree;
+    private GameObject _container;
 
     public void SetTree(Tree tree)
     {
@@ -15,10 +17,20 @@ public class TreeRenderer : MonoBehaviour
 
     private void SpawnNodesAndLines()
     {
+        // Destroy any existing container
+        if (_container != null)
+            Destroy(_container);
+
+        // Add empty child
+        _container = new GameObject("Container");
+        _container.transform.SetParent(this.transform);
+        _container.transform.localPosition = Vector3.zero;
+        
         for (var i = 0; i < _tree.Nodes.Count; i++)
         {
             var treeNode = _tree.Nodes[i];
-            var newNodeObject = Instantiate(nodeObject, GetNodeWorldPosition(treeNode), Quaternion.identity, transform);
+            var newNodeObject = Instantiate(nodeObject, GetNodeWorldPosition(treeNode), Quaternion.identity,
+                _container.transform);
             newNodeObject.name = "Node_" + treeNode.nodeIndex;
             
             if (treeNode.parent != null)
@@ -29,7 +41,8 @@ public class TreeRenderer : MonoBehaviour
     private void AddLineRenderer(TreeNode node, GameObject nodeGameObject)
     {
         // Add line renderer
-        var lineRenderer = Instantiate(lineRendererObject, Vector3.zero, Quaternion.identity, nodeGameObject.transform);
+        var lineRenderer =
+            Instantiate(lineRendererObject, Vector3.zero, Quaternion.identity, nodeGameObject.transform);
                 
         // Add line point at parent position
         lineRenderer.positionCount = 2;
@@ -40,7 +53,6 @@ public class TreeRenderer : MonoBehaviour
         });
                 
         // Color line according to iteration #
-        //var color = Color.Lerp(Color.green, Color.red, (float) node.nodeIndex / _tree.Nodes.Count);
         var color = Color.black;
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;

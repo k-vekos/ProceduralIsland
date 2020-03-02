@@ -24,12 +24,16 @@ public class Tree
 
     public TreeNode GetClosestNode(TreeNode target)
     {
+        return GetClosestNode(target.position);
+    }
+
+    public TreeNode GetClosestNode(Vector2 point)
+    {
         var closest = _allNodes[0];
-        var minDistance = Vector2.Distance(closest.position, target.position);
+        var minDistance = Vector2.Distance(closest.position, point);
         for (var i = 1; i < _allNodes.Count; i++)
         {
-            var distance = Vector2.Distance(_allNodes[i].position, target.position);
-            //Debug.Log($"Distance from #{i} to #{_allNodes.Count} is {distance}");
+            var distance = Vector2.Distance(_allNodes[i].position, point);
             if (distance < minDistance)
             {
                 closest = _allNodes[i];
@@ -37,7 +41,6 @@ public class Tree
             }
         }
 
-        //Debug.Log($"Closest to #{_allNodes.Count} found to be #{closest.nodeIndex}");
         return closest;
     }
 }

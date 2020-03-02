@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using csDelaunay;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter))]
@@ -17,9 +18,9 @@ public class VoronoiRenderer : MonoBehaviour
         }
     }
     
-    public void CreateAndSetMesh(Vector2[] points, Rectf bounds, int relax = 0)
+    public void SetVoronoi(Voronoi voronoi)
     {
-        var mesh = VoronoiMeshCreator.MeshFromPoints(points, bounds, relax);
+        var mesh = VoronoiMeshCreator.MeshFromVoronoi(voronoi);
         //var mesh = VoronoiMeshCreator.MeshFromPointsTriangleNet(points);
         //var mesh = VoronoiMeshCreator.MeshFromPointsDelaunator(points);
         MeshFilter.mesh = mesh;

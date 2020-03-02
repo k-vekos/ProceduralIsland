@@ -8,16 +8,7 @@ using UnityEngine;
 
 public static class VoronoiMeshCreator
 {
-    public static Mesh MeshFromPoints(Vector2[] points, Rectf bounds, int relax = 0)
-    {
-        var pointsF = points.Select(v => new Vector2f(v.x, v.y)).ToList();
-
-        var voronoi = new Voronoi(pointsF, bounds, relax);
-
-        return MeshFromVoronoi(voronoi);
-    }
-    
-    private static Mesh MeshFromVoronoi(Voronoi voronoi)
+    public static Mesh MeshFromVoronoi(Voronoi voronoi)
     {
         var options = new TriangleNet.Meshing.ConstraintOptions
         {
@@ -58,8 +49,6 @@ public static class VoronoiMeshCreator
             verticesIndex = vertices.Count;
             
             // Assign same color to all vertices in region
-            //var alpha = (float) i / regions.Count);
-            //var regionColor = Color.Lerp(Color.green, Color.red, alpha);
             var regionColor = new Color(Random.Range(0, 1f), Random.Range(0, 1f), Random.Range(0, 1f));
             colors.AddRange(cellMesh.Vertices.Select(v => regionColor));
         }
