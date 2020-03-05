@@ -3,6 +3,7 @@
     public enum CellType
     {
         Land,
-        Water
+        Water,
+        Sea
     }
 }

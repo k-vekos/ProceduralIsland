@@ -8,6 +8,7 @@ namespace Map
         public List<Vector2> Vertices { get; set; }
         public CellType CellType { get; set; }
         public int[] NeighborIndexes { get; set; }
+        public int Index { get; set; }
     }
 }
         

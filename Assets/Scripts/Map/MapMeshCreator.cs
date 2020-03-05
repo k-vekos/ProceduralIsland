@@ -7,6 +7,13 @@ namespace Map
 {
     public static class MapMeshCreator
     {
+        public static Dictionary<CellType, Color> CellTypeColors = new Dictionary<CellType, Color>
+        {
+            {CellType.Land, Color.green},
+            {CellType.Water, new Color(0, 0.64f, 0.91f)},
+            {CellType.Sea, Color.blue}
+        };
+        
         public static Mesh MeshFromCells(Cell[] cells)
         {
             var options = new TriangleNet.Meshing.ConstraintOptions
@@ -45,7 +52,7 @@ namespace Map
                 verticesIndex = vertices.Count;
             
                 // Assign same color to all vertices in cell
-                var regionColor = cell.CellType == CellType.Land ? Color.green : Color.blue;
+                var regionColor = ColorFromCellType(cell.CellType);
                 colors.AddRange(cellMesh.Vertices.Select(v => regionColor));
             }
             
@@ -61,6 +68,11 @@ namespace Map
             mesh.RecalculateNormals();
 
             return mesh;
+        }
+
+        private static Color ColorFromCellType(CellType cellType)
+        {
+            return CellTypeColors[cellType];
         }
     }
 }
