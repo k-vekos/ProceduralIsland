@@ -8,18 +8,31 @@ namespace Map
 {
     public static class MapHelper
     {
-        public static Cell[] CellsFromVoronoi(Voronoi voronoi)
+        public static Map MapFromVoronoi(Voronoi voronoi)
         {
-            var regions = voronoi.Regions();
-            var cells = regions.Select(region => new Cell
+            var map = new Map();
+            map.Cells = new Cell[voronoi.SitesIndexedByLocation.Count];
+            
+            foreach (var pair in voronoi.SitesIndexedByLocation)
             {
-                Vertices = region.Select(corner => new Vector2(corner.x, corner.y)).ToList()
-            });
-            return cells.ToArray();
+                var site = pair.Value;
+                var region = site.Region(voronoi.PlotBounds);
+                
+                var cell = new Cell
+                {
+                    Vertices = region.Select(corner => new Vector2(corner.x, corner.y)).ToList(),
+                    NeighborIndexes = site.NeighborSites().Select(s => s.SiteIndex).ToArray()
+                };
+                
+                map.Cells[site.SiteIndex] = cell;
+            }
+
+            return map;
         }
 
-        public static void CalculateCellTypes(Cell[] cells, Tree tree, float maxTreeNodeDistance)
+        public static void CalculateCellTypes(Map map, Tree tree, float maxTreeNodeDistance)
         {
+            var cells = map.Cells;
             foreach (var cell in cells)
             {
                 cell.CellType = CellType.Land;

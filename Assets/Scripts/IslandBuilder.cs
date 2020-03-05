@@ -40,8 +40,8 @@ public class IslandBuilder : MonoBehaviour
         var pointsF = points.Select(v => new Vector2f(v.x, v.y)).ToList();
         var voronoi = new Voronoi(pointsF, bounds, voronoiRelaxation);
 
-        var cells = MapHelper.CellsFromVoronoi(voronoi);
-        MapHelper.CalculateCellTypes(cells, tree, treeMaxGrowthLength);
+        var map = MapHelper.MapFromVoronoi(voronoi);
+        MapHelper.CalculateCellTypes(map, tree, treeMaxGrowthLength);
         
         if (treeRenderer != null)
             treeRenderer.SetTree(tree);
@@ -50,7 +50,7 @@ public class IslandBuilder : MonoBehaviour
             voronoiRenderer.SetVoronoi(voronoi);
 
         if (mapRenderer != null)
-            mapRenderer.SetCells(cells);
+            mapRenderer.SetMap(map);
     }
 
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)

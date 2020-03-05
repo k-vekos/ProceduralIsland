@@ -19,9 +19,9 @@ namespace Map
             }
         }
         
-        public void SetCells(Cell[] cells)
+        public void SetMap(Map map)
         {
-            var mesh = MapMeshCreator.MeshFromCells(cells);
+            var mesh = MapMeshCreator.MeshFromCells(map.Cells);
             MeshFilter.mesh = mesh;
         }
     }
