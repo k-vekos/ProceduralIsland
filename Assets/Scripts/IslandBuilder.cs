@@ -16,6 +16,7 @@ public class IslandBuilder : MonoBehaviour
     public int voronoiRelaxation = 0;
     public VoronoiRenderer voronoiRenderer;
     public MapRenderer mapRenderer;
+    public MapTextureRenderer mapTextureRenderer;
 
     public void Start()
     {
@@ -49,10 +50,15 @@ public class IslandBuilder : MonoBehaviour
         if (voronoiRenderer != null)
             voronoiRenderer.SetVoronoi(voronoi);
 
+        var mapMesh = MapMeshCreator.MeshFromCells(map.Cells);
+        
         if (mapRenderer != null)
-            mapRenderer.SetMap(map);
-    }
+            mapRenderer.SetMesh(mapMesh);
 
+        if (mapTextureRenderer != null)
+            mapTextureRenderer.RenderMeshToTexture(mapMesh);
+    }
+    
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)
     {
         var points = new List<Vector2>();

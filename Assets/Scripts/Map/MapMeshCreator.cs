@@ -7,11 +7,18 @@ namespace Map
 {
     public static class MapMeshCreator
     {
-        public static Dictionary<CellType, Color> CellTypeColors = new Dictionary<CellType, Color>
+        /*public static Dictionary<CellType, Color> CellTypeColors = new Dictionary<CellType, Color>
         {
             {CellType.Land, Color.green},
             {CellType.Water, new Color(0, 0.64f, 0.91f)},
             {CellType.Sea, Color.blue}
+        };*/
+        
+        public static Dictionary<CellType, Color> CellTypeColors = new Dictionary<CellType, Color>
+        {
+            {CellType.Land, Color.white},
+            {CellType.Water, Color.black},
+            {CellType.Sea, Color.black}
         };
         
         public static Mesh MeshFromCells(Cell[] cells)

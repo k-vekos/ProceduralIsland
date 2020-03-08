@@ -1,5 +1,4 @@
-﻿using csDelaunay;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Map
 {
@@ -19,9 +18,8 @@ namespace Map
             }
         }
         
-        public void SetMap(Map map)
+        public void SetMesh(Mesh mesh)
         {
-            var mesh = MapMeshCreator.MeshFromCells(map.Cells);
             MeshFilter.mesh = mesh;
         }
     }
