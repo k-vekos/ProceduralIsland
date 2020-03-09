@@ -56,7 +56,10 @@ public class IslandBuilder : MonoBehaviour
             mapRenderer.SetMesh(mapMesh);
 
         if (mapTextureRenderer != null)
-            mapTextureRenderer.RenderMeshToTexture(mapMesh);
+            mapTextureRenderer.RenderCellsToTexture(map.Cells.Where(c => c.CellType == CellType.Land).ToArray());
+
+        /*if (mapTextureRenderer != null)
+            mapTextureRenderer.RenderMeshToTexture(mapMesh);*/
     }
     
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)

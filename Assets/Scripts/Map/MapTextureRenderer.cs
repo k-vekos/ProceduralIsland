@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using csDelaunay;
 
 namespace Map
 {
@@ -7,6 +8,11 @@ namespace Map
         public MeshRenderer targetMeshRenderer;
         public Material drawMeshMaterial;
 
+        public void RenderCellsToTexture(Cell[] cells)
+        {
+            
+        }
+        
         public void RenderMeshToTexture(Mesh mesh)
         {
             var rt = RenderTexture.GetTemporary(512, 512);
