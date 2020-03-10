@@ -17,7 +17,7 @@ namespace Map
             {
                 var site = pair.Value;
                 var region = site.Region(voronoi.PlotBounds);
-                
+
                 var cell = new Cell
                 {
                     Vertices = region.Select(corner => new Vector2(corner.x, corner.y)).ToList(),

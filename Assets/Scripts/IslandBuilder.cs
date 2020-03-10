@@ -7,16 +7,17 @@ using Random = UnityEngine.Random;
 
 public class IslandBuilder : MonoBehaviour
 {
-    public float size = 100;
+    public int size = 100;
     public int treeNodeCount = 50;
     public float treeMaxGrowthLength = 10f;
+    public Rect treeBounds;
     public TreeRenderer treeRenderer;
     public int voronoiPointCount = 100;
-    public float voronoiSizeScale = 1f;
     public int voronoiRelaxation = 0;
     public VoronoiRenderer voronoiRenderer;
     public MapRenderer mapRenderer;
-    public MapTextureRenderer mapTextureRenderer;
+    public int mapTextureSize = 512;
+    public MeshRenderer mapTexturePreviewRenderer;
 
     public void Start()
     {
@@ -25,21 +26,19 @@ public class IslandBuilder : MonoBehaviour
     
     public void BuildIslandAndInitRenderers()
     {
-        var tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, size);
+        var tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, treeBounds);
         
-        var voronoiSize = size * voronoiSizeScale;
-        float scaleDifference = (size * voronoiSizeScale) - size;
-        var bounds = new Rectf(
-            0 - scaleDifference * 0.5f,
-            0 - scaleDifference * 0.5f,
-            voronoiSize,
-            voronoiSize
+        var voronoiBounds = new Rectf(
+            0,
+            0,
+            size,
+            size
         );
-        var points = new List<Vector2>(GetRandomPoints(voronoiPointCount, bounds));
+        var points = new List<Vector2>(GetRandomPoints(voronoiPointCount, voronoiBounds));
         // Throw the tree points in for fun
         points.AddRange(tree.Nodes.Select(n => n.position));
         var pointsF = points.Select(v => new Vector2f(v.x, v.y)).ToList();
-        var voronoi = new Voronoi(pointsF, bounds, voronoiRelaxation);
+        var voronoi = new Voronoi(pointsF, voronoiBounds, voronoiRelaxation);
 
         var map = MapHelper.MapFromVoronoi(voronoi);
         MapHelper.CalculateCellTypes(map, tree, treeMaxGrowthLength);
@@ -54,12 +53,15 @@ public class IslandBuilder : MonoBehaviour
         
         if (mapRenderer != null)
             mapRenderer.SetMesh(mapMesh);
-
-        if (mapTextureRenderer != null)
-            mapTextureRenderer.RenderCellsToTexture(map.Cells.Where(c => c.CellType == CellType.Land).ToArray());
-
-        /*if (mapTextureRenderer != null)
-            mapTextureRenderer.RenderMeshToTexture(mapMesh);*/
+        
+        if (mapTexturePreviewRenderer != null)
+        {
+            var texture =
+                MapTextureRenderer.RenderCellsToTexture(map.Cells.Where(c => c.CellType == CellType.Land).ToArray(),
+                    size, mapTextureSize);
+            
+            mapTexturePreviewRenderer.material.mainTexture = texture;
+        }        
     }
     
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)

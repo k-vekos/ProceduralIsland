@@ -2,24 +2,24 @@
 
 public static class RandomTreeBuilder
 {
-    public static Tree GetRandomTree(int iterations, float maxBranchLength, float size)
+    public static Tree GetRandomTree(int iterations, float maxBranchLength, Rect bounds)
     {
         // Place first node randomly in area and add to tree
-        var root = RandomSample(0, size);
+        var root = RandomSample(0, bounds);
         var tree = new Tree(root);
         
         for (var i = 1; i < iterations; i++)
         {
-            GrowTree(tree, i, maxBranchLength, size);
+            GrowTree(tree, i, maxBranchLength, bounds);
         }
         
         return tree;
     }
     
-    private static void GrowTree(Tree tree, int iteration, float growthLength, float size)
+    private static void GrowTree(Tree tree, int iteration, float growthLength, Rect bounds)
     {
         // Get a random sample
-        var sample = RandomSample(iteration, size);
+        var sample = RandomSample(iteration, bounds);
         
         // Get the closest node in the tree to the sample
         var closest = tree.GetClosestNode(sample);
@@ -36,9 +36,12 @@ public static class RandomTreeBuilder
         // Debug.Log($"Finished creating tree with {tree.Nodes.Count} nodes in {iteration} iterations.");
     }
 
-    private static TreeNode RandomSample(int nodeIndex, float size)
+    private static TreeNode RandomSample(int nodeIndex, Rect bounds)
     {
-        return new TreeNode(Random.Range(0f, size), Random.Range(0f, size), nodeIndex);
+        return new TreeNode(
+            Random.Range(bounds.x, bounds.x + bounds.width),
+            Random.Range(bounds.y, bounds.y + bounds.height),
+            nodeIndex);
     }
 
     private static TreeNode ExtendToward(TreeNode from, TreeNode towards, float growthLength, int iteration)

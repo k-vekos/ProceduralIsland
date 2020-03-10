@@ -53,7 +53,7 @@ public class TreeRenderer : MonoBehaviour
         });
                 
         // Color line according to iteration #
-        var color = Color.black;
+        var color = Color.red;
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
     }
