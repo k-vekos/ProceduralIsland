@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using Noise;
+using UnityEngine;
 
 namespace Map
 {
-    public static class MapTextureRenderer
+    public static class MapTextureHelper
     {
         private static Material _drawingMaterial;
 
@@ -77,6 +78,25 @@ namespace Map
             GL.PopMatrix();
 
             return CreateTextureFromRenderTexture(textureSize, renderTexture);
+        }
+
+        public static void ApplyNoiseToMapTexture(Texture2D mapTexture, float scale = 1f, float frequency = 8f, int octaves = 6,
+            float lacunarity = 2, float persistence = 0.5f)
+        {
+            var noiseTexture =
+                NoiseTextureHelper.PerlinNoise(mapTexture.width, scale, frequency, octaves, lacunarity, persistence);
+            
+            var mapColors = mapTexture.GetPixels();
+            var noiseColors = noiseTexture.GetPixels();
+
+            Debug.Assert(mapColors.Length == noiseColors.Length, "Cannot use textures with different resolutions!");
+            
+            for (var i = 0; i < mapColors.Length; ++i)
+            {
+                mapColors[i] *= noiseColors[i];
+            }
+            mapTexture.SetPixels(mapColors);
+            mapTexture.Apply();
         }
         
         private static Texture2D CreateTextureFromRenderTexture(int textureSize, RenderTexture renderTexture)

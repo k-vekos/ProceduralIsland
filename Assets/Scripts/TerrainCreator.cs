@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Noise;
 using UnityEngine;
 
 public class TerrainCreator : MonoBehaviour
@@ -39,7 +40,7 @@ public class TerrainCreator : MonoBehaviour
         var center = transform.TransformPoint(new Vector3(size.x * 0.5f, size.z * 0.5f, zOffset)); 
 
         // 3D noise
-        NoiseMethod method = Noise.noiseMethods[(int)type][2];
+        NoiseMethod method = NoiseHelper.noiseMethods[(int)type][2];
         
         MaskMethod lowerMaskMethod = Masks.maskMethods[(int)lowerMask];
         MaskMethod upperMaskMethod = Masks.maskMethods[(int)upperMask];
@@ -53,7 +54,7 @@ public class TerrainCreator : MonoBehaviour
             for (int x = 0; x < resolution; x++) 
             {
                 Vector3 point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);
-                float sample = Noise.Sum(method, point, frequency, octaves, lacunarity, persistence);
+                float sample = NoiseHelper.Sum(method, point, frequency, octaves, lacunarity, persistence);
                 if (type != NoiseMethodType.Value) 
                 {
                     sample = sample * 0.5f + 0.5f;

@@ -19,17 +19,14 @@ public class TextureCreatorInspector : Editor
 
     private void RefreshCreator()
     {
-        if (Application.isPlaying)
-        {
-            creator.FillTexture();
-        }
+        creator.FillTexture();
     }
 
     public override void OnInspectorGUI()
     {
-        EditorGUI.BeginChangeCheck();
         DrawDefaultInspector();
-        if (EditorGUI.EndChangeCheck())
+        
+        if(GUILayout.Button("Apply"))
         {
             RefreshCreator();
         }
