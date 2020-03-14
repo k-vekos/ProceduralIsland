@@ -4,6 +4,7 @@
     {
         Land,
         Water,
-        Sea
+        Sea,
+        Coast
     }
 }

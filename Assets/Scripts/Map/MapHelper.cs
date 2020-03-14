@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using csDelaunay;
 using UnityEngine;
@@ -17,17 +18,18 @@ namespace Map
             {
                 var site = pair.Value;
                 var region = site.Region(voronoi.PlotBounds);
+                var isEdgeCell = site.Edges.Any(e => e.IsPartOfConvexHull());
 
                 var cell = new Cell
                 {
-                    Vertices = region.Select(corner => new Vector2(corner.x, corner.y)).ToList(),
+                    Vertices = region.Select(corner => new Vector3(corner.x, corner.y, 0)).ToList(),
                     NeighborIndexes = site.NeighborSites().Select(s => s.SiteIndex).ToArray(),
                     Index = site.SiteIndex
                 };
                 
                 map.Cells[site.SiteIndex] = cell;
 
-                if (site.Edges.Any(e => e.IsPartOfConvexHull()))
+                if (isEdgeCell)
                     edgeCells.Add(cell);
             }
 
@@ -60,16 +62,69 @@ namespace Map
                 }
             }
             
-            // Second, flood fill from some edge cell to find Sea cells
-            FloodFillCellType(map, map.EdgeCells[0].Index, CellType.Sea);
+            // Flood fill from some edge cell to find Sea cells and get back coast cells
+            var coastCellIndexes = FloodFillCellType(map, map.EdgeCells[0].Index, CellType.Sea);
+
+            // Set cell elevations
+            SetElevations(map, coastCellIndexes);
         }
 
-        private static void FloodFillCellType(Map map, int cellIndex, CellType cellType)
+        private static void SetElevations(Map map, int[] coastCellIndexes, float elevationStepSize = 0.1f)
+        {
+            var visited = new List<int>();
+            visited.AddRange(coastCellIndexes);
+            
+            // <cell index, distance from coast>
+            var queue = new Queue<Tuple<int, int>>();
+            
+            foreach (var i in coastCellIndexes)
+            {
+                var cell = map.Cells[i];
+                cell.CellType = CellType.Coast;
+                cell.Elevation = elevationStepSize;
+
+                foreach (var n in cell.NeighborIndexes)
+                {
+                    if (map.Cells[n].CellType == CellType.Sea || map.Cells[n].CellType == CellType.Water)
+                        continue;
+
+                    if (!visited.Contains(n))
+                    {
+                        queue.Enqueue(new Tuple<int, int>(n, 1));
+                        visited.Add(n);
+                    }
+                }
+            }
+
+            while (queue.Count > 0)
+            {
+                var tuple = queue.Dequeue();
+                var cell = map.Cells[tuple.Item1];
+                var distanceFromCoast = tuple.Item2;
+
+                cell.Elevation = (distanceFromCoast + 1) * elevationStepSize;
+
+                foreach (var n in cell.NeighborIndexes)
+                {
+                    if (visited.Contains(n))
+                        continue;
+                    if (map.Cells[n].CellType == CellType.Sea || map.Cells[n].CellType == CellType.Water)
+                        continue;
+                    
+                    queue.Enqueue(new Tuple<int, int>(n, distanceFromCoast + 1));
+                    visited.Add(n);
+                }
+            }
+        }
+
+        private static int[] FloodFillCellType(Map map, int cellIndex, CellType cellType)
         {
             var visited = new List<int>();
             visited.Add(cellIndex);
             
             var queue = new Queue<int>();
+
+            var borderCellIndexes = new List<int>();
 
             var startCell = map.Cells[cellIndex];
             var replaceType = startCell.CellType;
@@ -89,12 +144,18 @@ namespace Map
 
                 foreach (var n in cell.NeighborIndexes)
                 {
-                    if (!visited.Contains(n) && !queue.Contains(n) && map.Cells[n].CellType == replaceType)
+                    if (visited.Contains(n) || queue.Contains(n))
+                        continue;
+                    if (map.Cells[n].CellType == replaceType)
                         queue.Enqueue(n);
+                    else if (!borderCellIndexes.Contains(n))
+                        borderCellIndexes.Add(n);
                 }
                 
                 visited.Add(index);
             }
+
+            return borderCellIndexes.ToArray();
         }
     }
 }

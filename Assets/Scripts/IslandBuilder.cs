@@ -51,18 +51,20 @@ public class IslandBuilder : MonoBehaviour
         if (voronoiRenderer != null)
             voronoiRenderer.SetVoronoi(voronoi);
 
-        var mapMesh = MapMeshCreator.MeshFromCells(map.Cells);
-        
         if (mapRenderer != null)
+        {
+            var mapMesh = MapMeshCreator.MeshFromCells(map.Cells);
             mapRenderer.SetMesh(mapMesh);
+        }
         
         if (mapTexturePreviewRenderer != null)
         {
             var texture =
-                MapTextureHelper.RenderCellsToTexture(map.Cells.Where(c => c.CellType == CellType.Land).ToArray(),
+                MapTextureHelper.RenderCellsToTexture(
+                    map.Cells.Where(c => c.CellType == CellType.Land || c.CellType == CellType.Coast).ToArray(),
                     size, mapTextureSize);
             
-            MapTextureHelper.ApplyNoiseToMapTexture(texture);
+            //MapTextureHelper.ApplyNoiseToMapTexture(texture);
             
             mapTexturePreviewRenderer.material.mainTexture = texture;
             
@@ -70,9 +72,7 @@ public class IslandBuilder : MonoBehaviour
             {
                 var pixelValues = texture.GetPixels().Select(c => c.r * terrainHeightScale).ToArray();
                 var heightArray = new float[mapTextureSize, mapTextureSize];
-                //for(var i = mapTextureSize - 1; i >= 0; i--) 
                 for(var i = 0; i < mapTextureSize; i++)
-                    //for (var j = mapTextureSize - 1; j >= 0; j--)
                     for (var j = 0; j < mapTextureSize; j++)
                         heightArray[j, i] = pixelValues[j * mapTextureSize + i]; 
                 

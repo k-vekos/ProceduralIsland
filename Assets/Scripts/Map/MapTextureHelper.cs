@@ -55,7 +55,7 @@ namespace Map
             GL.Begin(GL.TRIANGLES);
             foreach (var cell in cells)
             {
-                GL.Color(Color.white);
+                GL.Color(new Color(cell.Elevation, cell.Elevation, cell.Elevation));
 
                 var firstVertex = cell.Vertices[0];
                 var vertexCoint = cell.Vertices.Count;
@@ -80,7 +80,7 @@ namespace Map
             return CreateTextureFromRenderTexture(textureSize, renderTexture);
         }
 
-        public static void ApplyNoiseToMapTexture(Texture2D mapTexture, float scale = 1f, float frequency = 8f, int octaves = 6,
+        public static void ApplyNoiseToMapTexture(Texture2D mapTexture, float scale = 6f, float frequency = 1f, int octaves = 6,
             float lacunarity = 2, float persistence = 0.5f)
         {
             var noiseTexture =
