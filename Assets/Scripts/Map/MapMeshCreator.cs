@@ -21,7 +21,7 @@ namespace Map
             {CellType.Sea, Color.black}
         };
         
-        public static Mesh MeshFromCells(Cell[] cells)
+        /*public static Mesh MeshFromCells(Cell[] cells)
         {
             var options = new TriangleNet.Meshing.ConstraintOptions
             {
@@ -75,7 +75,7 @@ namespace Map
             mesh.RecalculateNormals();
 
             return mesh;
-        }
+        }*/
 
         private static Color ColorFromCellType(CellType cellType)
         {

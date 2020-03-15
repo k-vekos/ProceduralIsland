@@ -1,4 +1,6 @@
-﻿using Noise;
+﻿using System.Linq;
+using csDelaunay;
+using Noise;
 using UnityEngine;
 
 namespace Map
@@ -41,7 +43,12 @@ namespace Map
             return renderTexture;
         }
 
-        public static Texture2D RenderCellsToTexture(Cell[] cells, int mapSize, int textureSize)
+        private static Color ColorFromElevation(float elevation)
+        {
+            return new Color(elevation, elevation, elevation);
+        }
+
+        public static Texture2D RenderCellsToTexture(Cell[] cells, Map map, int mapSize, int textureSize, bool useVertices = false)
         {
             CreateDrawingMaterial();
             
@@ -55,22 +62,21 @@ namespace Map
             GL.Begin(GL.TRIANGLES);
             foreach (var cell in cells)
             {
-                GL.Color(new Color(cell.Elevation, cell.Elevation, cell.Elevation));
+                //var randomCellColor = new Color(Random.value, Random.value, Random.value);
 
-                var firstVertex = cell.Vertices[0];
-                var vertexCoint = cell.Vertices.Count;
-                for (var i = 1; i < vertexCoint; i++)
+                foreach (var edge in cell.Edges)
                 {
-                    var j = (i + 1) % vertexCoint;
-                    if (j == 0)
-                        break;
-                    
-                    var current = cell.Vertices[i];
-                    var next = cell.Vertices[(i + 1) % vertexCoint];
-                    
-                    GL.Vertex3(current.x, current.y, 0);
-                    GL.Vertex3(next.x, next.y, 0);
-                    GL.Vertex3(firstVertex.x, firstVertex.y, 0);
+                    var left = edge.LeftVertex;
+                    var right = edge.RightVertex;
+
+                    GL.Color(ColorFromElevation(map.VerticesHeightsByIndex[left.VertexIndex]));
+                    GL.Vertex3(left.x, left.y, 0);
+                    GL.Color(ColorFromElevation(map.VerticesHeightsByIndex[right.VertexIndex]));
+                    GL.Vertex3(right.x, right.y, 0);
+
+                    var averageHeight = cell.VertexIndices.Average(vi => map.VerticesHeightsByIndex[vi]);
+                    GL.Color(ColorFromElevation(averageHeight));
+                    GL.Vertex3(cell.CenterPoint.x, cell.CenterPoint.y, 0);
                 }
             }
             GL.End();

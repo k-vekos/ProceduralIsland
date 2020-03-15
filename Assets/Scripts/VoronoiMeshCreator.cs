@@ -72,7 +72,7 @@ public static class VoronoiMeshCreator
         var vertices = new List<Vector3>();
         foreach (var edge in edges)
         {
-            // if the edge doesn't have clippedEnds, if was not within the bounds, dont draw it
+            // if the edge doesn't have clippedEnds, it was not within the bounds, dont draw it
             if (edge.ClippedEnds == null) continue;
             
             // Add each edge point as entirely new vertex

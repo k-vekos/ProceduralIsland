@@ -44,6 +44,7 @@ public class IslandBuilder : MonoBehaviour
 
         var map = MapHelper.MapFromVoronoi(voronoi);
         MapHelper.CalculateCellTypes(map, tree, treeMaxGrowthLength);
+        map.SetVerticesHeights();
         
         if (treeRenderer != null)
             treeRenderer.SetTree(tree);
@@ -51,18 +52,18 @@ public class IslandBuilder : MonoBehaviour
         if (voronoiRenderer != null)
             voronoiRenderer.SetVoronoi(voronoi);
 
-        if (mapRenderer != null)
+        /*if (mapRenderer != null)
         {
             var mapMesh = MapMeshCreator.MeshFromCells(map.Cells);
             mapRenderer.SetMesh(mapMesh);
-        }
+        }*/
         
         if (mapTexturePreviewRenderer != null)
         {
             var texture =
                 MapTextureHelper.RenderCellsToTexture(
                     map.Cells.Where(c => c.CellType == CellType.Land || c.CellType == CellType.Coast).ToArray(),
-                    size, mapTextureSize);
+                    map, size, mapTextureSize);
             
             //MapTextureHelper.ApplyNoiseToMapTexture(texture);
             

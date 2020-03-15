@@ -12,6 +12,8 @@ namespace Map
         {
             var map = new Map();
             map.Cells = new Cell[voronoi.SitesIndexedByLocation.Count];
+            map.CellsByVertexIndex = new Dictionary<int, List<Cell>>();
+            map.Voronoi = voronoi;
 
             var edgeCells = new List<Cell>();
             foreach (var pair in voronoi.SitesIndexedByLocation)
@@ -19,18 +21,31 @@ namespace Map
                 var site = pair.Value;
                 var region = site.Region(voronoi.PlotBounds);
                 var isEdgeCell = site.Edges.Any(e => e.IsPartOfConvexHull());
-
+                var vertices = region.Select(corner => new Vector3(corner.x, corner.y)).ToList();
+                
                 var cell = new Cell
                 {
-                    Vertices = region.Select(corner => new Vector3(corner.x, corner.y, 0)).ToList(),
+                    Vertices = vertices,
                     NeighborIndexes = site.NeighborSites().Select(s => s.SiteIndex).ToArray(),
-                    Index = site.SiteIndex
+                    Index = site.SiteIndex,
+                    Edges = site.Edges
                 };
-                
+
                 map.Cells[site.SiteIndex] = cell;
 
                 if (isEdgeCell)
                     edgeCells.Add(cell);
+
+                var verteciesInCell = cell.Edges.Select(e => e.LeftVertex).ToList();
+                verteciesInCell.AddRange(cell.Edges.Select(e => e.RightVertex));
+                foreach (var vertex in verteciesInCell)
+                {
+                    if (!map.CellsByVertexIndex.ContainsKey(vertex.VertexIndex))
+                        map.CellsByVertexIndex.Add(vertex.VertexIndex, new List<Cell>());
+                    map.CellsByVertexIndex[vertex.VertexIndex].Add(cell);
+                }
+
+                cell.VertexIndices = verteciesInCell.Select(v => v.VertexIndex).ToArray();
             }
 
             map.EdgeCells = edgeCells.ToArray();
