@@ -31,7 +31,8 @@ namespace Map
         private static RenderTexture CreateRenderTexture(int textureSize, Color color)
         {
             // get a temporary RenderTexture //
-            RenderTexture renderTexture = RenderTexture.GetTemporary(textureSize, textureSize);
+            RenderTexture renderTexture =
+                RenderTexture.GetTemporary(textureSize, textureSize, 0, RenderTextureFormat.RFloat);
 
             // set the RenderTexture as global target (that means GL too)
             RenderTexture.active = renderTexture;
@@ -50,9 +51,6 @@ namespace Map
 
         public static Texture2D RenderMapToTexture(Map map, int mapSize, int textureSize)
         {
-            var cells =
-                map.Cells.Where(c => c.CellType == CellType.Land || c.CellType == CellType.Coast);
-            
             CreateDrawingMaterial();
             
             var renderTexture = CreateRenderTexture(textureSize, Color.black);
@@ -63,7 +61,7 @@ namespace Map
             GL.Viewport(new Rect(0, 0, textureSize, textureSize));
             
             GL.Begin(GL.TRIANGLES);
-            foreach (var cell in cells)
+            foreach (var cell in map.Cells)
             {
                 //var randomCellColor = new Color(Random.value, Random.value, Random.value);
                 var randomCellColor = Color.white;
@@ -115,7 +113,7 @@ namespace Map
         private static Texture2D CreateTextureFromRenderTexture(int textureSize, RenderTexture renderTexture)
         {
             // read the active RenderTexture into a new Texture2D //
-            Texture2D newTexture = new Texture2D(textureSize, textureSize);
+            Texture2D newTexture = new Texture2D(textureSize, textureSize, TextureFormat.RFloat, 0, true);
             newTexture.ReadPixels(new Rect(0, 0, textureSize, textureSize), 0, 0);
 
             // apply pixels and compress //

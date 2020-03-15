@@ -1,0 +1,1 @@
+﻿public struct RFloat { public float R; }

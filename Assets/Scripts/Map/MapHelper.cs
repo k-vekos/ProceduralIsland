@@ -78,10 +78,10 @@ namespace Map
             var coastCellIndexes = FloodFillCellType(map, map.EdgeCells[0].Index, CellType.Sea);
 
             // Set cell elevations
-            SetElevations(map, coastCellIndexes);
+            SetElevations(map, coastCellIndexes, 0.1f);
         }
 
-        private static void SetElevations(Map map, int[] coastCellIndexes, float elevationStepSize = 0.1f)
+        private static void SetElevations(Map map, int[] coastCellIndexes, float elevationStepSize)
         {
             var visited = new List<int>();
             visited.AddRange(coastCellIndexes);

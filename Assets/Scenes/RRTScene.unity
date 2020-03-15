@@ -214,7 +214,7 @@ Camera:
   near clip plane: 0.3
   far clip plane: 2000
   field of view: 60
-  orthographic: 1
+  orthographic: 0
   orthographic size: 127
   m_Depth: -1
   m_CullingMask:
@@ -238,8 +238,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 253191667}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 200, y: 100, z: 100}
+  m_LocalRotation: {x: -0.3176425, y: -0.07427804, z: 0.025208468, w: -0.94496065}
+  m_LocalPosition: {x: 274.7312, y: 81.839, z: -41.221603}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -925,7 +925,7 @@ MonoBehaviour:
   voronoiRelaxation: 2
   voronoiRenderer: {fileID: 0}
   mapRenderer: {fileID: 0}
-  mapTextureSize: 1024
+  mapTextureSize: 512
   mapTexturePreviewRenderer: {fileID: 1076793527}
   targetTerrain: {fileID: 1387550046}
   terrainHeightScale: 1
@@ -1115,7 +1115,7 @@ Terrain:
   m_DrawInstanced: 0
   m_DrawTreesAndFoliage: 1
   m_ReflectionProbeUsage: 1
-  m_MaterialTemplate: {fileID: 2100000, guid: 01375082faa6d434f8f19bf0a1a8d6fa, type: 2}
+  m_MaterialTemplate: {fileID: 2100000, guid: ec6b91c680d39e344ab895ac094f92a2, type: 2}
   m_BakeLightProbesForTrees: 1
   m_PreserveTreePrototypeLayers: 0
   m_DeringLightProbesForTrees: 1
@@ -1485,7 +1485,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: f77f5642f5e18d14baef408611fd24eb, type: 2}
+  - {fileID: 2100000, guid: ebc672d6c0236f944b19ecd867889714, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

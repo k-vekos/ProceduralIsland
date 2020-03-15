@@ -66,10 +66,10 @@ public class IslandBuilder : MonoBehaviour
 
             for (int i = 0; i < 15; i++)
             {
-                //BlurMapTexture(texture);
+                BlurMapTexture(texture);
             }
             
-            //MapTextureHelper.ApplyNoiseToMapTexture(texture);
+            MapTextureHelper.ApplyNoiseToMapTexture(texture);
 
             mapTexturePreviewRenderer.material.mainTexture = texture;
             
@@ -109,11 +109,11 @@ public class IslandBuilder : MonoBehaviour
 
     private static void BlurMapTexture(Texture2D texture)
     {
-        if (texture.format != TextureFormat.RGBA32)
+        if (texture.format != TextureFormat.RFloat)
             throw new UnityException($"Wrong format. Texture is not {TextureFormat.RGB24} but {texture.format}");
         
-        var job = new BlurRGBA32Job(texture.GetRawTextureData<RGBA32>(), texture.width);
-        var rawData = texture.GetRawTextureData<RGBA32>();
+        var job = new BlurRFloatJob(texture.GetRawTextureData<RFloat>(), texture.width);
+        var rawData = texture.GetRawTextureData<RFloat>();
         job.Schedule(rawData.Length, texture.width).Complete();
         
         texture.Apply();

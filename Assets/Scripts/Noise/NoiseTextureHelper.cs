@@ -6,7 +6,7 @@ namespace Noise
     {
         public static Texture2D PerlinNoise(int resolution, float scale, float frequency, int octaves, float lacunarity, float persistence)
         {
-            var texture = new Texture2D(resolution, resolution, TextureFormat.RGB24, true);
+            var texture = new Texture2D(resolution, resolution, TextureFormat.RFloat, false, true);
             texture.name = "Perlin Noise Texture";
             texture.wrapMode = TextureWrapMode.Clamp;
             texture.filterMode = FilterMode.Trilinear;
