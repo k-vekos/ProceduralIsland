@@ -925,7 +925,7 @@ MonoBehaviour:
   voronoiRelaxation: 2
   voronoiRenderer: {fileID: 0}
   mapRenderer: {fileID: 0}
-  mapTextureSize: 512
+  mapTextureSize: 1024
   mapTexturePreviewRenderer: {fileID: 1076793527}
   targetTerrain: {fileID: 1387550046}
   terrainHeightScale: 1

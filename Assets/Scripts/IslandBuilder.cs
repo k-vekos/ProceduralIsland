@@ -4,6 +4,7 @@ using csDelaunay;
 using Map;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Unity.Jobs;
 
 public class IslandBuilder : MonoBehaviour
 {
@@ -44,7 +45,7 @@ public class IslandBuilder : MonoBehaviour
 
         var map = MapHelper.MapFromVoronoi(voronoi);
         MapHelper.CalculateCellTypes(map, tree, treeMaxGrowthLength);
-        map.SetVerticesHeights();
+        map.SetCornerElevations();
         
         if (treeRenderer != null)
             treeRenderer.SetTree(tree);
@@ -61,27 +62,63 @@ public class IslandBuilder : MonoBehaviour
         if (mapTexturePreviewRenderer != null)
         {
             var texture =
-                MapTextureHelper.RenderCellsToTexture(
-                    map.Cells.Where(c => c.CellType == CellType.Land || c.CellType == CellType.Coast).ToArray(),
-                    map, size, mapTextureSize);
+                MapTextureHelper.RenderMapToTexture(map, size, mapTextureSize);
+
+            for (int i = 0; i < 15; i++)
+            {
+                //BlurMapTexture(texture);
+            }
             
             //MapTextureHelper.ApplyNoiseToMapTexture(texture);
-            
+
             mapTexturePreviewRenderer.material.mainTexture = texture;
             
             if (targetTerrain != null)
             {
-                var pixelValues = texture.GetPixels().Select(c => c.r * terrainHeightScale).ToArray();
-                var heightArray = new float[mapTextureSize, mapTextureSize];
-                for(var i = 0; i < mapTextureSize; i++)
-                    for (var j = 0; j < mapTextureSize; j++)
-                        heightArray[j, i] = pixelValues[j * mapTextureSize + i]; 
+                var terrainResolution = targetTerrain.terrainData.heightmapResolution;
+                var heightArray = new float[terrainResolution, terrainResolution];
+                var stepSize = 1f / terrainResolution;
+                
+                for (int i = 0; i < terrainResolution; i++)
+                {
+                    for (int j = 0; j < terrainResolution; j++)
+                    {
+                        /*var stepSize = 1f / resolution;
+                        for (var y = 0; y < resolution; y++) 
+                        {
+                            var point0 = Vector3.Lerp(point00, point01, (y + 0.5f) * stepSize);
+                            var point1 = Vector3.Lerp(point10, point11, (y + 0.5f) * stepSize);
+                            for (var x = 0; x < resolution; x++) 
+                            {
+                                var point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);*/
+                        
+                        //var u = Mathf.Lerp(0, texture.width, (float) i / terrainResolution);
+                        //var v = Mathf.Lerp(0, texture.width, (float) j / terrainResolution);
+
+                        var u = (i + 0.5f) * stepSize;
+                        var v = (j + 0.5f) * stepSize;
+                        
+                        heightArray[i, j] = texture.GetPixelBilinear(u, v).r;
+                    }
+                }
                 
                 targetTerrain.terrainData.SetHeights(0, 0, heightArray);
             }
         }        
     }
-    
+
+    private static void BlurMapTexture(Texture2D texture)
+    {
+        if (texture.format != TextureFormat.RGBA32)
+            throw new UnityException($"Wrong format. Texture is not {TextureFormat.RGB24} but {texture.format}");
+        
+        var job = new BlurRGBA32Job(texture.GetRawTextureData<RGBA32>(), texture.width);
+        var rawData = texture.GetRawTextureData<RGBA32>();
+        job.Schedule(rawData.Length, texture.width).Complete();
+        
+        texture.Apply();
+    }
+
     private static Vector2[] GetRandomPoints(int count, Rectf bounds)
     {
         var points = new List<Vector2>();

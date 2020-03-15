@@ -48,8 +48,11 @@ namespace Map
             return new Color(elevation, elevation, elevation);
         }
 
-        public static Texture2D RenderCellsToTexture(Cell[] cells, Map map, int mapSize, int textureSize, bool useVertices = false)
+        public static Texture2D RenderMapToTexture(Map map, int mapSize, int textureSize)
         {
+            var cells =
+                map.Cells.Where(c => c.CellType == CellType.Land || c.CellType == CellType.Coast);
+            
             CreateDrawingMaterial();
             
             var renderTexture = CreateRenderTexture(textureSize, Color.black);
@@ -63,20 +66,24 @@ namespace Map
             foreach (var cell in cells)
             {
                 //var randomCellColor = new Color(Random.value, Random.value, Random.value);
+                var randomCellColor = Color.white;
 
-                foreach (var edge in cell.Edges)
+                for (var i = 0; i < cell.Corners.Count; i++)
                 {
-                    var left = edge.LeftVertex;
-                    var right = edge.RightVertex;
+                    var first = cell.Corners[i];
+                    var second = cell.Corners[(i + 1) % cell.Corners.Count];
+                    
+                    GL.Color(ColorFromElevation(first.Elevation) * randomCellColor);
+                    GL.Vertex3(first.Position.x, first.Position.y, 0);
+                    GL.Color(ColorFromElevation(second.Elevation) * randomCellColor);
+                    GL.Vertex3(second.Position.x, second.Position.y, 0);
 
-                    GL.Color(ColorFromElevation(map.VerticesHeightsByIndex[left.VertexIndex]));
-                    GL.Vertex3(left.x, left.y, 0);
-                    GL.Color(ColorFromElevation(map.VerticesHeightsByIndex[right.VertexIndex]));
-                    GL.Vertex3(right.x, right.y, 0);
 
-                    var averageHeight = cell.VertexIndices.Average(vi => map.VerticesHeightsByIndex[vi]);
-                    GL.Color(ColorFromElevation(averageHeight));
-                    GL.Vertex3(cell.CenterPoint.x, cell.CenterPoint.y, 0);
+                    var averageX = cell.Corners.Average(c => c.Position.x);
+                    var averageY = cell.Corners.Average(c => c.Position.y);
+                    var averageHeight = cell.Corners.Average(c => c.Elevation);
+                    GL.Color(ColorFromElevation(averageHeight) * randomCellColor);
+                    GL.Vertex3(averageX, averageY, 0);
                 }
             }
             GL.End();

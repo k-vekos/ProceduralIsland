@@ -10,10 +10,12 @@ namespace Map
     {
         public static Map MapFromVoronoi(Voronoi voronoi)
         {
-            var map = new Map();
-            map.Cells = new Cell[voronoi.SitesIndexedByLocation.Count];
-            map.CellsByVertexIndex = new Dictionary<int, List<Cell>>();
-            map.Voronoi = voronoi;
+            var map = new Map
+            {
+                Cells = new Cell[voronoi.SitesIndexedByLocation.Count],
+                CellsByVertexIndex = new Dictionary<int, List<Cell>>(),
+                Voronoi = voronoi
+            };
 
             var edgeCells = new List<Cell>();
             foreach (var pair in voronoi.SitesIndexedByLocation)
@@ -21,31 +23,26 @@ namespace Map
                 var site = pair.Value;
                 var region = site.Region(voronoi.PlotBounds);
                 var isEdgeCell = site.Edges.Any(e => e.IsPartOfConvexHull());
-                var vertices = region.Select(corner => new Vector3(corner.x, corner.y)).ToList();
                 
                 var cell = new Cell
                 {
-                    Vertices = vertices,
                     NeighborIndexes = site.NeighborSites().Select(s => s.SiteIndex).ToArray(),
                     Index = site.SiteIndex,
                     Edges = site.Edges
                 };
 
+                /* "The Voronoi library generates multiple Point objects for corners, and we need to canonicalize to one
+                Corner object. To make lookup fast, we keep an array of Points, bucketed by x value, and then we only
+                have to look at other Points in nearby buckets. When we fail to find one, we'll create a new
+                Corner object." */
+                var corners = 
+                    region.Select(point => map.CreateCornerForCell(point.x, point.y, cell));
+                cell.Corners = corners.ToList();
+
                 map.Cells[site.SiteIndex] = cell;
 
                 if (isEdgeCell)
                     edgeCells.Add(cell);
-
-                var verteciesInCell = cell.Edges.Select(e => e.LeftVertex).ToList();
-                verteciesInCell.AddRange(cell.Edges.Select(e => e.RightVertex));
-                foreach (var vertex in verteciesInCell)
-                {
-                    if (!map.CellsByVertexIndex.ContainsKey(vertex.VertexIndex))
-                        map.CellsByVertexIndex.Add(vertex.VertexIndex, new List<Cell>());
-                    map.CellsByVertexIndex[vertex.VertexIndex].Add(cell);
-                }
-
-                cell.VertexIndices = verteciesInCell.Select(v => v.VertexIndex).ToArray();
             }
 
             map.EdgeCells = edgeCells.ToArray();
@@ -64,10 +61,10 @@ namespace Map
                 
                 // TODO Also mark as land if there is a node inside the area of the cell
                 // Set as land if all vertices within range, else set water
-                foreach (var vertex in cell.Vertices)
+                foreach (var corner in cell.Corners)
                 {
-                    var closestNode = tree.GetClosestNode(vertex);
-                    var distance = Vector2.Distance(closestNode.position, vertex);
+                    var closestNode = tree.GetClosestNode(corner.Position);
+                    var distance = Vector2.Distance(closestNode.position, corner.Position);
                     
                     if (distance > maxTreeNodeDistance)
                     {

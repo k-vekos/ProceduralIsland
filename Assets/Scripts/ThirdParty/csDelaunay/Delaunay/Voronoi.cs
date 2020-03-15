@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -19,8 +19,6 @@ namespace csDelaunay {
 		
 		private Dictionary<Vector2f,Site> sitesIndexedByLocation;
 		public Dictionary<Vector2f,Site> SitesIndexedByLocation {get{return sitesIndexedByLocation;}}
-		
-		public Dictionary<int, Vertex> Vertices { get; set; }
 
 		private Random weigthDistributor;
 
@@ -291,13 +289,6 @@ namespace csDelaunay {
 			foreach (Edge e in edges) {
 				e.ClipVertices(plotBounds);
 			}
-
-			Vertices = new Dictionary<int, Vertex>();
-			foreach (var ve in vertices)
-			{
-				Vertices.Add(ve.VertexIndex, ve);
-			}
-			
 			// But we don't actually ever use them again!
 			foreach (Vertex ve in vertices) {
 				ve.Dispose();
