@@ -15,12 +15,9 @@ public class IslandBuilder : MonoBehaviour
     public TreeRenderer treeRenderer;
     public int voronoiPointCount = 100;
     public int voronoiRelaxation = 0;
-    public VoronoiRenderer voronoiRenderer;
-    public MapRenderer mapRenderer;
     public int mapTextureSize = 512;
     public MeshRenderer mapTexturePreviewRenderer;
     public Terrain targetTerrain;
-    public float terrainHeightScale = 10f;
 
     public void Start()
     {
@@ -49,62 +46,80 @@ public class IslandBuilder : MonoBehaviour
         
         if (treeRenderer != null)
             treeRenderer.SetTree(tree);
-
-        if (voronoiRenderer != null)
-            voronoiRenderer.SetVoronoi(voronoi);
-
-        /*if (mapRenderer != null)
-        {
-            var mapMesh = MapMeshCreator.MeshFromCells(map.Cells);
-            mapRenderer.SetMesh(mapMesh);
-        }*/
         
         if (mapTexturePreviewRenderer != null)
         {
             var texture =
                 MapTextureHelper.RenderMapToTexture(map, size, mapTextureSize);
-
             for (int i = 0; i < 15; i++)
             {
                 BlurMapTexture(texture);
             }
-            
             MapTextureHelper.ApplyNoiseToMapTexture(texture);
-
             mapTexturePreviewRenderer.material.mainTexture = texture;
             
             if (targetTerrain != null)
             {
-                var terrainResolution = targetTerrain.terrainData.heightmapResolution;
-                var heightArray = new float[terrainResolution, terrainResolution];
-                var stepSize = 1f / terrainResolution;
-                
-                for (int i = 0; i < terrainResolution; i++)
-                {
-                    for (int j = 0; j < terrainResolution; j++)
-                    {
-                        /*var stepSize = 1f / resolution;
-                        for (var y = 0; y < resolution; y++) 
-                        {
-                            var point0 = Vector3.Lerp(point00, point01, (y + 0.5f) * stepSize);
-                            var point1 = Vector3.Lerp(point10, point11, (y + 0.5f) * stepSize);
-                            for (var x = 0; x < resolution; x++) 
-                            {
-                                var point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);*/
-                        
-                        //var u = Mathf.Lerp(0, texture.width, (float) i / terrainResolution);
-                        //var v = Mathf.Lerp(0, texture.width, (float) j / terrainResolution);
-
-                        var u = (i + 0.5f) * stepSize;
-                        var v = (j + 0.5f) * stepSize;
-                        
-                        heightArray[i, j] = texture.GetPixelBilinear(u, v).r;
-                    }
-                }
-                
-                targetTerrain.terrainData.SetHeights(0, 0, heightArray);
+                SetTerrainHeights(targetTerrain, texture);
+                SetTerrainAlphamapValues(targetTerrain, texture);
             }
         }        
+    }
+
+    private void SetTerrainAlphamapValues(Terrain terrain, Texture2D heightMap)
+    {
+        var terrainData = terrain.terrainData;
+        var alphaMapResolution = terrainData.alphamapWidth;
+        var alphaMap = new float[alphaMapResolution, alphaMapResolution, terrainData.alphamapLayers];
+        var alphaStepSize = 1f / terrainData.alphamapWidth;
+        //var layerSpacing = 1f / terrainData.alphamapLayers;
+        var layerSpacing = 0.1f;
+
+        // For each point on the alphamap...
+        for (var y = 0; y < alphaMapResolution; y++)
+        {
+            for (var x = 0; x < alphaMapResolution; x++)
+            {
+                var u = (x + 0.5f) * alphaStepSize;
+                var v = (y + 0.5f) * alphaStepSize;
+                var elevation = heightMap.GetPixelBilinear(u, v).r;
+                for (var i = 0; i < terrainData.alphamapLayers; i++)
+                {
+                    if (i + 1 < terrainData.alphamapLayers)
+                    {
+                        alphaMap[x, y, i] =
+                            elevation >= i * layerSpacing && elevation < (i + 1) * layerSpacing ? 1f : 0f;
+                    }
+                    else
+                    {
+                        alphaMap[x, y, i] = elevation >= i * layerSpacing ? 1f : 0f;
+                    }
+                }
+            }
+        }
+
+        terrainData.SetAlphamaps(0, 0, alphaMap);
+    }
+
+    private static void SetTerrainHeights(Terrain terrain, Texture2D heightMap)
+    {
+        var terrainData = terrain.terrainData;
+        var terrainResolution = terrainData.heightmapResolution;
+        var heightArray = new float[terrainResolution, terrainResolution];
+
+        var stepSize = 1f / terrainResolution;
+        for (var i = 0; i < terrainResolution; i++)
+        {
+            for (var j = 0; j < terrainResolution; j++)
+            {
+                var u = (i + 0.5f) * stepSize;
+                var v = (j + 0.5f) * stepSize;
+
+                heightArray[i, j] = heightMap.GetPixelBilinear(u, v).r;
+            }
+        }
+
+        terrainData.SetHeights(0, 0, heightArray);
     }
 
     private static void BlurMapTexture(Texture2D texture)
