@@ -24,12 +24,18 @@ public class TextureCreator : MonoBehaviour
 
     [Range(0f, 1f)]
     public float persistence = 0.5f;
+
+    public bool expandRange = true;
     
     //public Gradient coloring;
 
     public void FillTexture()
     {
-        GetComponent<MeshRenderer>().sharedMaterial.mainTexture =
-            NoiseTextureHelper.PerlinNoise(resolution, scale, frequency, octaves, lacunarity, persistence);
+        var texture = NoiseTextureHelper.PerlinNoise(resolution, scale, frequency, octaves, lacunarity, persistence);
+        
+        if (expandRange)
+            NoiseTextureHelper.ExpandRange(texture);
+        
+        GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
     }
 }

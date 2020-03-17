@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Map
+namespace Maps
 {
     [RequireComponent(typeof(MeshFilter))]
     public class MapRenderer : MonoBehaviour

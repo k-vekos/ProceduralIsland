@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using csDelaunay;
-using Map;
+using Maps;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Unity.Jobs;
@@ -16,17 +17,20 @@ public class IslandBuilder : MonoBehaviour
     public int voronoiPointCount = 100;
     public int voronoiRelaxation = 0;
     public int mapTextureSize = 512;
+    public bool applyBlur = true;
+    public bool applyNoise = true;
     public MeshRenderer mapTexturePreviewRenderer;
+    public int seaFloorElevation = -2;
     public Terrain targetTerrain;
 
-    public void Start()
-    {
-        BuildIslandAndInitRenderers();
-    }
+    private Map _map;
+    private Texture2D _mapTexture;
+    private Tree _tree;
+    private Voronoi _voronoi;
     
     public void BuildIslandAndInitRenderers()
     {
-        var tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, treeBounds);
+        _tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, treeBounds);
         
         var voronoiBounds = new Rectf(
             0,
@@ -36,35 +40,46 @@ public class IslandBuilder : MonoBehaviour
         );
         var points = new List<Vector2>(GetRandomPoints(voronoiPointCount, voronoiBounds));
         // Throw the tree points in for fun
-        points.AddRange(tree.Nodes.Select(n => n.position));
+        points.AddRange(_tree.Nodes.Select(n => n.position));
         var pointsF = points.Select(v => new Vector2f(v.x, v.y)).ToList();
-        var voronoi = new Voronoi(pointsF, voronoiBounds, voronoiRelaxation);
+        _voronoi = new Voronoi(pointsF, voronoiBounds, voronoiRelaxation);
 
-        var map = MapHelper.MapFromVoronoi(voronoi);
-        MapHelper.CalculateCellTypes(map, tree, treeMaxGrowthLength);
-        map.SetCornerElevations();
+        _map = MapHelper.MapFromVoronoi(_voronoi);
+        MapHelper.CalculateCellTypes(_map, _tree, treeMaxGrowthLength, seaFloorElevation);
+        _map.SetCornerElevations();
         
         if (treeRenderer != null)
-            treeRenderer.SetTree(tree);
+            treeRenderer.SetTree(_tree);
         
-        if (mapTexturePreviewRenderer != null)
-        {
-            var texture =
-                MapTextureHelper.RenderMapToTexture(map, size, mapTextureSize);
-            for (int i = 0; i < 15; i++)
-            {
-                BlurMapTexture(texture);
-            }
-            MapTextureHelper.ApplyNoiseToMapTexture(texture);
-            mapTexturePreviewRenderer.material.mainTexture = texture;
-            
-            if (targetTerrain != null)
-            {
-                SetTerrainHeights(targetTerrain, texture);
-                SetTerrainAlphamapValues(targetTerrain, texture);
-            }
-        }        
+        UpdateMapTexture();      
     }
+
+    public void UpdateMapTexture()
+    {
+        if (_map == null)
+        {
+            // Debug.LogWarning($"{MethodBase.GetCurrentMethod().Name}: No map set, aborting.");
+            return;
+        }
+        
+        _mapTexture = MapTextureHelper.RenderMapToTexture(_map, size, mapTextureSize);
+        
+        if (applyBlur)
+            for (int i = 0; i < 15; i++)
+                BlurMapTexture(_mapTexture);
+
+        if (applyNoise)
+            MapTextureHelper.ApplyNoiseToMapTexture(_mapTexture);
+
+        if (mapTexturePreviewRenderer != null)
+            mapTexturePreviewRenderer.sharedMaterial.mainTexture = _mapTexture;
+        
+        if (targetTerrain != null)
+        {
+            SetTerrainHeights(targetTerrain, _mapTexture);
+            SetTerrainAlphamapValues(targetTerrain, _mapTexture);
+        }
+    } 
 
     private void SetTerrainAlphamapValues(Terrain terrain, Texture2D heightMap)
     {
@@ -87,12 +102,12 @@ public class IslandBuilder : MonoBehaviour
                 {
                     if (i + 1 < terrainData.alphamapLayers)
                     {
-                        alphaMap[x, y, i] =
+                        alphaMap[y, x, i] =
                             elevation >= i * layerSpacing && elevation < (i + 1) * layerSpacing ? 1f : 0f;
                     }
                     else
                     {
-                        alphaMap[x, y, i] = elevation >= i * layerSpacing ? 1f : 0f;
+                        alphaMap[y, x, i] = elevation >= i * layerSpacing ? 1f : 0f;
                     }
                 }
             }
@@ -115,7 +130,7 @@ public class IslandBuilder : MonoBehaviour
                 var u = (i + 0.5f) * stepSize;
                 var v = (j + 0.5f) * stepSize;
 
-                heightArray[i, j] = heightMap.GetPixelBilinear(u, v).r;
+                heightArray[j, i] = heightMap.GetPixelBilinear(u, v).r;
             }
         }
 

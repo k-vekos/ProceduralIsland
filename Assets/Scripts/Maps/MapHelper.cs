@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using csDelaunay;
 using UnityEngine;
 
-namespace Map
+namespace Maps
 {
     public static class MapHelper
     {
@@ -50,7 +49,7 @@ namespace Map
             return map;
         }
 
-        public static void CalculateCellTypes(Map map, Tree tree, float maxTreeNodeDistance)
+        public static void CalculateCellTypes(Map map, Tree tree, float maxTreeNodeDistance, int minElevation)
         {
             var cells = map.Cells;
             
@@ -78,55 +77,7 @@ namespace Map
             var coastCellIndexes = FloodFillCellType(map, map.EdgeCells[0].Index, CellType.Sea);
 
             // Set cell elevations
-            SetElevations(map, coastCellIndexes, 0.1f);
-        }
-
-        private static void SetElevations(Map map, int[] coastCellIndexes, float elevationStepSize)
-        {
-            var visited = new List<int>();
-            visited.AddRange(coastCellIndexes);
-            
-            // <cell index, distance from coast>
-            var queue = new Queue<Tuple<int, int>>();
-            
-            foreach (var i in coastCellIndexes)
-            {
-                var cell = map.Cells[i];
-                cell.CellType = CellType.Coast;
-                cell.Elevation = elevationStepSize;
-
-                foreach (var n in cell.NeighborIndexes)
-                {
-                    if (map.Cells[n].CellType == CellType.Sea || map.Cells[n].CellType == CellType.Water)
-                        continue;
-
-                    if (!visited.Contains(n))
-                    {
-                        queue.Enqueue(new Tuple<int, int>(n, 1));
-                        visited.Add(n);
-                    }
-                }
-            }
-
-            while (queue.Count > 0)
-            {
-                var tuple = queue.Dequeue();
-                var cell = map.Cells[tuple.Item1];
-                var distanceFromCoast = tuple.Item2;
-
-                cell.Elevation = (distanceFromCoast + 1) * elevationStepSize;
-
-                foreach (var n in cell.NeighborIndexes)
-                {
-                    if (visited.Contains(n))
-                        continue;
-                    if (map.Cells[n].CellType == CellType.Sea || map.Cells[n].CellType == CellType.Water)
-                        continue;
-                    
-                    queue.Enqueue(new Tuple<int, int>(n, distanceFromCoast + 1));
-                    visited.Add(n);
-                }
-            }
+            map.SetElevations(coastCellIndexes, minElevation);
         }
 
         private static int[] FloodFillCellType(Map map, int cellIndex, CellType cellType)

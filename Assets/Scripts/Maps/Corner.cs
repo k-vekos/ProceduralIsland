@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Map
+namespace Maps
 {
     public class Corner
     {

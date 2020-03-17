@@ -38,5 +38,42 @@ namespace Noise
             
             return texture;
         }
+
+        public static void ExpandRange(Texture2D texture)
+        {
+            var min = 1f;
+            var max = 0f;
+            
+            // Find min and max
+            for (var x = 0; x < texture.width; x++)
+            {
+                for (var y = 0; y < texture.height; y++)
+                {
+                    var color = texture.GetPixel(x, y);
+                    var value = color.r;
+
+                    if (value < min)
+                        min = value;
+                    if (value > max)
+                        max = value;
+                }
+            }
+            
+            // Remap texture value range from min to max to min to 1f
+            for (var x = 0; x < texture.width; x++)
+            {
+                for (var y = 0; y < texture.height; y++)
+                {
+                    var color = texture.GetPixel(x, y);
+                    var value = color.r;
+
+                    var normal = Mathf.InverseLerp(min, max, value);
+                    value = Mathf.Lerp(min, 1f, normal);
+                    texture.SetPixel(x, y, new Color(value, value, value));
+                }
+            }
+            
+            texture.Apply();
+        }
     }
 }

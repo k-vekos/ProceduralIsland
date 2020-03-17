@@ -1,4 +1,4 @@
-﻿namespace Map
+﻿namespace Maps
 {
     public enum CellType
     {

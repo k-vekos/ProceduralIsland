@@ -1,9 +1,8 @@
 ﻿using System.Linq;
-using csDelaunay;
 using Noise;
 using UnityEngine;
 
-namespace Map
+namespace Maps
 {
     public static class MapTextureHelper
     {
@@ -63,24 +62,27 @@ namespace Map
             GL.Begin(GL.TRIANGLES);
             foreach (var cell in map.Cells)
             {
-                //var randomCellColor = new Color(Random.value, Random.value, Random.value);
-                var randomCellColor = Color.white;
-
                 for (var i = 0; i < cell.Corners.Count; i++)
                 {
                     var first = cell.Corners[i];
                     var second = cell.Corners[(i + 1) % cell.Corners.Count];
+                    var firstElevation = map.GetNormalizedElevation(first.Elevation);
+                    var secondElevation = map.GetNormalizedElevation(second.Elevation);
                     
-                    GL.Color(ColorFromElevation(first.Elevation) * randomCellColor);
+                    GL.Color(ColorFromElevation(firstElevation));
                     GL.Vertex3(first.Position.x, first.Position.y, 0);
-                    GL.Color(ColorFromElevation(second.Elevation) * randomCellColor);
+                    GL.Color(ColorFromElevation(secondElevation));
                     GL.Vertex3(second.Position.x, second.Position.y, 0);
-
 
                     var averageX = cell.Corners.Average(c => c.Position.x);
                     var averageY = cell.Corners.Average(c => c.Position.y);
                     var averageHeight = cell.Corners.Average(c => c.Elevation);
-                    GL.Color(ColorFromElevation(averageHeight) * randomCellColor);
+                    averageHeight = map.GetNormalizedElevation(averageHeight);
+                    
+                    // TODO Move this to somewhere less obscure
+                    cell.Elevation = averageHeight;
+                    
+                    GL.Color(ColorFromElevation(averageHeight));
                     GL.Vertex3(averageX, averageY, 0);
                 }
             }
@@ -96,6 +98,7 @@ namespace Map
         {
             var noiseTexture =
                 NoiseTextureHelper.PerlinNoise(mapTexture.width, scale, frequency, octaves, lacunarity, persistence);
+            NoiseTextureHelper.ExpandRange(noiseTexture);
             
             var mapColors = mapTexture.GetPixels();
             var noiseColors = noiseTexture.GetPixels();

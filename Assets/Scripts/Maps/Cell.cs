@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using csDelaunay;
-using UnityEngine;
 
-namespace Map
+namespace Maps
 {
     public class Cell
     {
