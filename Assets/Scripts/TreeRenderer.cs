@@ -6,16 +6,10 @@ public class TreeRenderer : MonoBehaviour
     public GameObject nodeObject;
     public LineRenderer lineRendererObject;
 
-    private Tree _tree;
+    //private Tree _tree;
     private GameObject _container;
 
-    public void SetTree(Tree tree)
-    {
-        this._tree = tree;
-        SpawnNodesAndLines();
-    }
-
-    private void SpawnNodesAndLines()
+    public void SpawnNodesAndLines(Tree tree, int mapSize, Terrain terrain)
     {
         // Destroy any existing container
         if (_container != null)
@@ -32,19 +26,19 @@ public class TreeRenderer : MonoBehaviour
         _container.transform.SetParent(this.transform);
         _container.transform.localPosition = Vector3.zero;
         
-        for (var i = 0; i < _tree.Nodes.Count; i++)
+        for (var i = 0; i < tree.Nodes.Count; i++)
         {
-            var treeNode = _tree.Nodes[i];
-            var newNodeObject = Instantiate(nodeObject, GetNodeWorldPosition(treeNode), Quaternion.identity,
+            var treeNode = tree.Nodes[i];
+            var newNodeObject = Instantiate(nodeObject, GetNodeWorldPosition(treeNode, mapSize, terrain), Quaternion.identity,
                 _container.transform);
             newNodeObject.name = "Node_" + treeNode.nodeIndex;
             
             if (treeNode.parent != null)
-                AddLineRenderer(treeNode, newNodeObject);
+                AddLineRenderer(treeNode, newNodeObject, mapSize, terrain);
         }
     }
     
-    private void AddLineRenderer(TreeNode node, GameObject nodeGameObject)
+    private void AddLineRenderer(TreeNode node, GameObject nodeGameObject, int mapSize, Terrain terrain)
     {
         // Add line renderer
         var lineRenderer =
@@ -54,18 +48,30 @@ public class TreeRenderer : MonoBehaviour
         lineRenderer.positionCount = 2;
         lineRenderer.SetPositions(new[]
         {
-            GetNodeWorldPosition(node.parent),
-            GetNodeWorldPosition(node)
+            GetNodeWorldPosition(node.parent, mapSize, terrain),
+            GetNodeWorldPosition(node, mapSize, terrain)
         });
                 
         // Color line according to iteration #
-        var color = Color.red;
+        var color = Color.blue;
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
+        lineRenderer.startWidth = 3f;
+        lineRenderer.endWidth = 3f;
     }
     
-    private Vector3 GetNodeWorldPosition(TreeNode treeNode)
+    private Vector3 GetNodeWorldPosition(TreeNode treeNode, int mapSize, Terrain terrain)
     {
-        return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y));
+        var normalX = Mathf.InverseLerp(0, mapSize, treeNode.position.x);
+        var normalY = Mathf.InverseLerp(0, mapSize, treeNode.position.y);
+
+        /*var remappedX = Mathf.Lerp(0, terrainSize, normalX);
+        var remappedY = Mathf.Lerp(0, terrainSize, normalY);*/
+
+        return new Vector3(
+            normalX * terrain.terrainData.size.x,
+            terrain.terrainData.size.y,
+            normalY * terrain.terrainData.size.x);
+        //return transform.TransformPoint(new Vector3(treeNode.position.x, 0f, treeNode.position.y));
     }
 }

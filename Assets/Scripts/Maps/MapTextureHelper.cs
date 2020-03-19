@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Noise;
 using UnityEngine;
 
@@ -7,6 +8,14 @@ namespace Maps
     public static class MapTextureHelper
     {
         private static Material _drawingMaterial;
+        
+        public static Dictionary<CellType, Color> CellTypeColors = new Dictionary<CellType, Color>
+        {
+            {CellType.Land, Color.white},
+            {CellType.Coast, Color.white},
+            {CellType.Water, Color.gray},
+            {CellType.Sea, Color.black}
+        };
 
         private static void CreateDrawingMaterial()
         {
@@ -93,12 +102,47 @@ namespace Maps
             return CreateTextureFromRenderTexture(textureSize, renderTexture);
         }
 
+        public static Texture2D RenderMapToVoronoiTexture(Map map, int mapSize, int textureSize,
+            bool colorByCellElevation = false)
+        {
+            CreateDrawingMaterial();
+            
+            var renderTexture = CreateRenderTexture(textureSize, Color.black);
+            
+            _drawingMaterial.SetPass(0);
+            GL.PushMatrix();
+            GL.LoadPixelMatrix(0, mapSize, 0, mapSize);
+            GL.Viewport(new Rect(0, 0, textureSize, textureSize));
+            
+            GL.Begin(GL.TRIANGLES);
+            foreach (var cell in map.Cells)
+            {
+                for (var i = 0; i < cell.Corners.Count; i++)
+                {
+                    var first = cell.Corners[i];
+                    var second = cell.Corners[(i + 1) % cell.Corners.Count];
+                    var averageX = cell.Corners.Average(c => c.Position.x);
+                    var averageY = cell.Corners.Average(c => c.Position.y);
+
+                    GL.Color(colorByCellElevation ? ColorFromElevation(cell.Elevation) : CellTypeColors[cell.CellType]);
+
+                    GL.Vertex3(first.Position.x, first.Position.y, 0);
+                    GL.Vertex3(second.Position.x, second.Position.y, 0);
+                    GL.Vertex3(averageX, averageY, 0);
+                }
+            }
+            GL.End();
+            
+            GL.PopMatrix();
+
+            return CreateTextureFromRenderTexture(textureSize, renderTexture);
+        }
+
         public static void ApplyNoiseToMapTexture(Texture2D mapTexture, PerlinNoiseSettings settings,
             float noiseOffsetFactor)
         {
             var noiseTexture =
                 NoiseTextureHelper.PerlinNoise(mapTexture.width, settings);
-            //NoiseTextureHelper.ExpandRange(noiseTexture);
             
             var mapColors = mapTexture.GetPixels();
             var noiseColors = noiseTexture.GetPixels();
@@ -108,7 +152,6 @@ namespace Maps
             
             for (var i = 0; i < mapColors.Length; ++i)
             {
-                //mapColors[i] *= noiseColors[i] * noiseOffsetFactor;
                 mapColors[i].r -= noiseColors[i].r * noiseOffsetFactor;
             }
             

@@ -21,6 +21,7 @@ public class IslandBuilder : MonoBehaviour
     public int mapTextureSize = 512;
     public bool applyBlur = true;
     public bool applyNoise = true;
+    public MeshRenderer voronoiTextureRenderer;
     public MeshRenderer mapTexturePreviewRenderer;
     public int seaFloorElevation = -2;
     public Terrain targetTerrain;
@@ -31,6 +32,7 @@ public class IslandBuilder : MonoBehaviour
 
     private Map _map;
     private Texture2D _mapTexture;
+    private Texture2D _voronoiTexture;
     private Tree _tree;
     private Voronoi _voronoi;
 
@@ -70,7 +72,7 @@ public class IslandBuilder : MonoBehaviour
         _map.SetCornerElevations();
         
         if (treeRenderer != null)
-            treeRenderer.SetTree(_tree);
+            treeRenderer.SpawnNodesAndLines(_tree, size, targetTerrain);
         
         UpdateMapTexture();      
     }
@@ -82,7 +84,8 @@ public class IslandBuilder : MonoBehaviour
             // Debug.LogWarning($"{MethodBase.GetCurrentMethod().Name}: No map set, aborting.");
             return;
         }
-        
+
+        _voronoiTexture = MapTextureHelper.RenderMapToVoronoiTexture(_map, size, mapTextureSize, true);
         _mapTexture = MapTextureHelper.RenderMapToTexture(_map, size, mapTextureSize);
         
         if (applyBlur)
@@ -91,6 +94,9 @@ public class IslandBuilder : MonoBehaviour
 
         if (applyNoise)
             MapTextureHelper.ApplyNoiseToMapTexture(_mapTexture, perlinNoiseSettings, noiseOffsetFactor);
+
+        if (voronoiTextureRenderer != null)
+            voronoiTextureRenderer.sharedMaterial.mainTexture = _voronoiTexture;
 
         if (mapTexturePreviewRenderer != null)
             mapTexturePreviewRenderer.sharedMaterial.mainTexture = _mapTexture;
@@ -106,7 +112,8 @@ public class IslandBuilder : MonoBehaviour
     private void SetTerrainToSeaLevel()
     {
         var elevations = (_map.MaxElevation - _map.MinElevation) + 1;
-        var offset = (1f / elevations) * targetTerrain.terrainData.heightmapScale.y * Mathf.Abs(_map.MinElevation);
+        //var offset = (1f / elevations) * targetTerrain.terrainData.heightmapScale.y * Mathf.Abs(_map.MinElevation);
+        var offset = (1f / elevations) * targetTerrain.terrainData.size.y * Mathf.Abs(_map.MinElevation);
         var terrainTransform = targetTerrain.gameObject.transform;
         terrainTransform.localPosition =
             new Vector3(terrainTransform.localPosition.x, -1f * offset, terrainTransform.localPosition.z);
