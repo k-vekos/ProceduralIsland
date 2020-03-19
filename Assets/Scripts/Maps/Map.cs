@@ -16,7 +16,7 @@ namespace Maps
         public int MaxElevation { get; private set; } = 0;
         public int MinElevation { get; private set; } = 0;
 
-        private new readonly Dictionary<int, List<Corner>> _cornerMap = new Dictionary<int, List<Corner>>();
+        private readonly Dictionary<int, List<Corner>> _cornerMap = new Dictionary<int, List<Corner>>();
 
         public Corner CreateCornerForCell(float x, float y, Cell cell)
         {

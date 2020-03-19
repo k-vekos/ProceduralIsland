@@ -20,6 +20,12 @@ public class TreeRenderer : MonoBehaviour
         // Destroy any existing container
         if (_container != null)
             DestroyImmediate(_container);
+        else
+        {
+            foreach (Transform child in transform) {
+                DestroyImmediate(child.gameObject);
+            }
+        }
 
         // Add empty child
         _container = new GameObject("Container");

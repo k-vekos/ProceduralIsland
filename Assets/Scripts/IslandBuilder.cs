@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using csDelaunay;
 using Maps;
+using Noise;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Unity.Jobs;
@@ -22,12 +24,31 @@ public class IslandBuilder : MonoBehaviour
     public MeshRenderer mapTexturePreviewRenderer;
     public int seaFloorElevation = -2;
     public Terrain targetTerrain;
+    public Gradient terrainLayerMap;
+    
+    public PerlinNoiseSettings perlinNoiseSettings;
+    public float noiseOffsetFactor = 0.1f;
 
     private Map _map;
     private Texture2D _mapTexture;
     private Tree _tree;
     private Voronoi _voronoi;
-    
+
+    public void OnEnable()
+    {
+        Debug.Log("IslandBuilder is OnEnable()!");
+    }
+
+    private void Awake()
+    {
+        Debug.Log("IslandBuilder is Awake()!");
+    }
+
+    private void Start()
+    {
+        Debug.Log("IslandBuilder is Start()!");
+    }
+
     public void BuildIslandAndInitRenderers()
     {
         _tree = RandomTreeBuilder.GetRandomTree(treeNodeCount, treeMaxGrowthLength, treeBounds);
@@ -69,7 +90,7 @@ public class IslandBuilder : MonoBehaviour
                 BlurMapTexture(_mapTexture);
 
         if (applyNoise)
-            MapTextureHelper.ApplyNoiseToMapTexture(_mapTexture);
+            MapTextureHelper.ApplyNoiseToMapTexture(_mapTexture, perlinNoiseSettings, noiseOffsetFactor);
 
         if (mapTexturePreviewRenderer != null)
             mapTexturePreviewRenderer.sharedMaterial.mainTexture = _mapTexture;
@@ -78,8 +99,31 @@ public class IslandBuilder : MonoBehaviour
         {
             SetTerrainHeights(targetTerrain, _mapTexture);
             SetTerrainAlphamapValues(targetTerrain, _mapTexture);
+            SetTerrainToSeaLevel();
         }
-    } 
+    }
+
+    private void SetTerrainToSeaLevel()
+    {
+        var elevations = (_map.MaxElevation - _map.MinElevation) + 1;
+        var offset = (1f / elevations) * targetTerrain.terrainData.heightmapScale.y * Mathf.Abs(_map.MinElevation);
+        var terrainTransform = targetTerrain.gameObject.transform;
+        terrainTransform.localPosition =
+            new Vector3(terrainTransform.localPosition.x, -1f * offset, terrainTransform.localPosition.z);
+    }
+
+    private float GetAlphamapWeightForLayer(int layer, float height)
+    {
+        var color = terrainLayerMap.Evaluate(height);
+        
+        if (layer == 0)
+        {
+            var value = color.r + color.g + color.b;
+            return 1f - value;
+        }
+
+        return color[layer - 1];
+    }
 
     private void SetTerrainAlphamapValues(Terrain terrain, Texture2D heightMap)
     {
@@ -87,8 +131,6 @@ public class IslandBuilder : MonoBehaviour
         var alphaMapResolution = terrainData.alphamapWidth;
         var alphaMap = new float[alphaMapResolution, alphaMapResolution, terrainData.alphamapLayers];
         var alphaStepSize = 1f / terrainData.alphamapWidth;
-        //var layerSpacing = 1f / terrainData.alphamapLayers;
-        var layerSpacing = 0.1f;
 
         // For each point on the alphamap...
         for (var y = 0; y < alphaMapResolution; y++)
@@ -97,18 +139,10 @@ public class IslandBuilder : MonoBehaviour
             {
                 var u = (x + 0.5f) * alphaStepSize;
                 var v = (y + 0.5f) * alphaStepSize;
-                var elevation = heightMap.GetPixelBilinear(u, v).r;
+                var height = heightMap.GetPixelBilinear(u, v).r;
                 for (var i = 0; i < terrainData.alphamapLayers; i++)
                 {
-                    if (i + 1 < terrainData.alphamapLayers)
-                    {
-                        alphaMap[y, x, i] =
-                            elevation >= i * layerSpacing && elevation < (i + 1) * layerSpacing ? 1f : 0f;
-                    }
-                    else
-                    {
-                        alphaMap[y, x, i] = elevation >= i * layerSpacing ? 1f : 0f;
-                    }
+                    alphaMap[y, x, i] = GetAlphamapWeightForLayer(i, height);
                 }
             }
         }

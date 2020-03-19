@@ -4,7 +4,7 @@ namespace Noise
 {
     public static class NoiseTextureHelper
     {
-        public static Texture2D PerlinNoise(int resolution, float scale, float frequency, int octaves, float lacunarity, float persistence)
+        public static Texture2D PerlinNoise(int resolution, PerlinNoiseSettings settings)
         {
             var texture = new Texture2D(resolution, resolution, TextureFormat.RFloat, false, true);
             texture.name = "Perlin Noise Texture";
@@ -15,9 +15,9 @@ namespace Noise
             var method = NoiseHelper.noiseMethods[(int)NoiseMethodType.Perlin][2];
             
             var point00 = new Vector3(0, 0);
-            var point10 = new Vector3(scale, 0);
-            var point01 = new Vector3(0, scale);
-            var point11 = new Vector3(scale, scale);
+            var point10 = new Vector3(1f, 0);
+            var point01 = new Vector3(0, 1f);
+            var point11 = new Vector3(1f, 1f);
         
             var stepSize = 1f / resolution;
             for (var y = 0; y < resolution; y++) 
@@ -27,7 +27,7 @@ namespace Noise
                 for (var x = 0; x < resolution; x++) 
                 {
                     var point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);
-                    var sample = NoiseHelper.Sum(method, point, frequency, octaves, lacunarity, persistence);
+                    var sample = NoiseHelper.Sum(method, point, settings);
                     sample = sample * 0.5f + 0.5f;
                 
                     texture.SetPixel(x, y, new Color(sample, sample, sample));

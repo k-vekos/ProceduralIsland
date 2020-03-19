@@ -5,16 +5,20 @@ using UnityEngine;
 
 public class TerrainCreator : MonoBehaviour
 {
-    public float frequency = 1f;
     public NoiseMethodType type;
     public MaskTypes upperMask;
     public MaskTypes lowerMask;
+
+    public PerlinNoiseSettings perlinNoiseSettings;
+    
+    public float frequency = 1f;
     [Range(1, 8)]
     public int octaves = 1;
     [Range(1f, 4f)]
     public float lacunarity = 2f;
     [Range(0f, 1f)]
     public float persistence = 0.5f;
+    
     public float scale = 1f;
     public float heightScale = 0.1f;
     public float zOffset = 0f;
@@ -54,7 +58,7 @@ public class TerrainCreator : MonoBehaviour
             for (int x = 0; x < resolution; x++) 
             {
                 Vector3 point = Vector3.Lerp(point0, point1, (x + 0.5f) * stepSize);
-                float sample = NoiseHelper.Sum(method, point, frequency, octaves, lacunarity, persistence);
+                float sample = NoiseHelper.Sum(method, point, perlinNoiseSettings);
                 if (type != NoiseMethodType.Value) 
                 {
                     sample = sample * 0.5f + 0.5f;

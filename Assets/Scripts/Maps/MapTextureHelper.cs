@@ -93,22 +93,25 @@ namespace Maps
             return CreateTextureFromRenderTexture(textureSize, renderTexture);
         }
 
-        public static void ApplyNoiseToMapTexture(Texture2D mapTexture, float scale = 6f, float frequency = 1f, int octaves = 6,
-            float lacunarity = 2, float persistence = 0.5f)
+        public static void ApplyNoiseToMapTexture(Texture2D mapTexture, PerlinNoiseSettings settings,
+            float noiseOffsetFactor)
         {
             var noiseTexture =
-                NoiseTextureHelper.PerlinNoise(mapTexture.width, scale, frequency, octaves, lacunarity, persistence);
-            NoiseTextureHelper.ExpandRange(noiseTexture);
+                NoiseTextureHelper.PerlinNoise(mapTexture.width, settings);
+            //NoiseTextureHelper.ExpandRange(noiseTexture);
             
             var mapColors = mapTexture.GetPixels();
             var noiseColors = noiseTexture.GetPixels();
 
-            Debug.Assert(mapColors.Length == noiseColors.Length, "Cannot use textures with different resolutions!");
+            Debug.Assert(mapColors.Length == noiseColors.Length,
+                "Cannot use textures with different resolutions!");
             
             for (var i = 0; i < mapColors.Length; ++i)
             {
-                mapColors[i] *= noiseColors[i];
+                //mapColors[i] *= noiseColors[i] * noiseOffsetFactor;
+                mapColors[i].r -= noiseColors[i].r * noiseOffsetFactor;
             }
+            
             mapTexture.SetPixels(mapColors);
             mapTexture.Apply();
         }
