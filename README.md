@@ -1,9 +1,9 @@
-# Notes
+# To-Do
 
-* What does `Height` property of `Terrain` do exactly?
-* Need to add masking to generate square/round continent/island
-* In progress:
-  * https://catlikecoding.com/unity/tutorials/noise-derivatives/ +
-    http://infalliblecode.com/unity-terrain-generation/
-* Finished:
-  * https://catlikecoding.com/unity/tutorials/noise/
+* Add masking to generate square/round continent/island
+
+# References
+
+* https://catlikecoding.com/unity/tutorials/noise-derivatives/
+* http://infalliblecode.com/unity-terrain-generation/
+* https://catlikecoding.com/unity/tutorials/noise/
