@@ -1,3 +1,5 @@
+![Preview](./lWgyNFpf7J.gif)
+
 # To-Do
 
 * Add masking to generate square/round continent/island
